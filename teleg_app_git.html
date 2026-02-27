@@ -153,6 +153,10 @@
       background: var(--accent-color);
       color: #fff;
     }
+    .date-btn.primary.active {
+      background: #7c3aed;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
     .date-btn.active {
       border-color: var(--accent-color);
       background: rgba(79, 70, 229, 0.12);
@@ -544,6 +548,10 @@
             b.classList.remove('active');
           }
         });
+        // Also handle calendar button
+        if (button && button !== btnCalendar) {
+          btnCalendar.classList.remove('active');
+        }
       }
 
       btnToday.addEventListener('click', () => {
@@ -596,17 +604,31 @@
 
       btnCalendar.addEventListener('click', () => {
         dateInput.min = getTodayStr();
-        if (typeof dateInput.showPicker === 'function') {
-          dateInput.showPicker();
+        // Toggle active state
+        if (btnCalendar.classList.contains('active')) {
+          btnCalendar.classList.remove('active');
+          dateInput.value = '';
+          setSelectedDateText('');
+          setActiveQuick(null);
         } else {
-          dateInput.click();
+          btnCalendar.classList.add('active');
+          if (typeof dateInput.showPicker === 'function') {
+            dateInput.showPicker();
+          } else {
+            dateInput.click();
+          }
         }
       });
 
       dateInput.addEventListener('change', () => {
         const v = dateInput.value;
         setSelectedDateText(v);
-        setActiveQuick(null);
+        if (v) {
+          btnCalendar.classList.add('active');
+          setActiveQuick(null);
+        } else {
+          btnCalendar.classList.remove('active');
+        }
       });
 
       btnAdd.addEventListener('click', async () => {
