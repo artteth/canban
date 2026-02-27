@@ -17,10 +17,25 @@ function doGet(e) {
     const action = e.parameter.action || 'getTasks';
     
     let result;
-    if (action === 'getTasks') {
-      result = getTasks();
-    } else {
-      result = { ok: false, error: 'Unknown action' };
+    try {
+      if (action === 'getTasks') {
+        result = getTasks();
+      } else if (action === 'addTask') {
+        const title = e.parameter.title || '';
+        const plannedDate = e.parameter.plannedDate || '';
+        result = addTask(title, plannedDate);
+      } else if (action === 'updateStatus') {
+        const id = e.parameter.id;
+        const status = e.parameter.status;
+        result = updateTaskStatus(id, status);
+      } else if (action === 'deleteTask') {
+        const id = e.parameter.id;
+        result = deleteTask(id);
+      } else {
+        result = { ok: false, error: 'Unknown action' };
+      }
+    } catch (err) {
+      result = { ok: false, error: err.message };
     }
     
     const output = ContentService

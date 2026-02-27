@@ -329,11 +329,12 @@
     }
 
     // JSONP запрос для обхода CORS с GitHub Pages
-    function apiJsonp(action) {
+    function apiJsonp(action, params = {}) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_callback_' + Date.now();
-        const params = new URLSearchParams({ mode: 'jsonp', action, callback: callbackName });
-        const url = `${API_URL}?${params}`;
+        const urlParams = { mode: 'jsonp', action, callback: callbackName, ...params };
+        const paramsStr = new URLSearchParams(urlParams).toString();
+        const url = `${API_URL}?${paramsStr}`;
         console.log('JSONP URL:', url);
         
         // Создаём script тег
@@ -449,7 +450,7 @@
         btnAdd.disabled = true;
         haptic('success');
         try {
-          const data = await apiJsonp('addTask');
+          const data = await apiJsonp('addTask', { title, plannedDate: planned });
           tasks = data || [];
           renderAll();
           input.value = '';
@@ -588,7 +589,7 @@
       if (!taskId || !newStatus) return;
       haptic('light');
       try {
-        const data = await apiPost({ action: 'updateStatus', id: taskId, status: newStatus });
+        const data = await apiJsonp('updateStatus', { id: taskId, status: newStatus });
         tasks = data || [];
         renderAll();
       } catch (e) {
