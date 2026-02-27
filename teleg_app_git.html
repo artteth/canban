@@ -76,6 +76,177 @@
       background: var(--bg-secondary);
     }
 
+    /* Settings Button */
+    .settings-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-primary);
+      transition: all 0.3s;
+      margin-left: 8px;
+    }
+    .settings-btn:hover {
+      background: var(--bg-secondary);
+    }
+    .header-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* Settings Modal */
+    .settings-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+    }
+    .settings-modal.active {
+      display: block;
+    }
+    .settings-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .settings-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .settings-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .settings-close {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    .settings-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+    }
+    .settings-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .settings-row:last-child {
+      margin-bottom: 0;
+    }
+    .settings-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .settings-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-control input[type="range"] {
+      width: 100px;
+      height: 6px;
+      -webkit-appearance: none;
+      background: var(--border-color);
+      border-radius: 3px;
+      outline: none;
+    }
+    .settings-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: pointer;
+    }
+    .settings-control .size-value {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 32px;
+      text-align: right;
+    }
+    .settings-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .settings-toggle.active {
+      background: var(--accent-color);
+    }
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    .settings-toggle.active::after {
+      left: 22px;
+    }
+
+    /* Font size CSS variables */
+    :root {
+      --font-size-todo: 15px;
+      --font-size-inprogress: 15px;
+      --font-size-done: 15px;
+      --font-weight-todo: 500;
+      --font-weight-inprogress: 500;
+      --font-weight-done: 500;
+    }
+
+    .task-card.todo .task-title { font-size: var(--font-size-todo); font-weight: var(--font-weight-todo); }
+    .task-card.inprogress .task-title { font-size: var(--font-size-inprogress); font-weight: var(--font-weight-inprogress); }
+    .task-card.done .task-title { font-size: var(--font-size-done); font-weight: var(--font-weight-done); }
+
     .add-card {
       margin-top: 10px;
       padding: 14px 14px 12px 14px;
@@ -457,9 +628,12 @@
         <div class="app-title">Задачи</div>
         <div class="app-subtitle">Сначала записать, потом разбирать</div>
       </div>
-      <button class="theme-toggle" id="themeToggle" title="Сменить тему">
-        <span id="themeIcon">🌙</span>
-      </button>
+      <div class="header-buttons">
+        <button class="theme-toggle" id="themeToggle" title="Сменить тему">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <button class="settings-btn" id="settingsBtn" title="Настройки">⚙️</button>
+      </div>
     </header>
 
     <section class="add-card">
@@ -495,6 +669,62 @@
           <div class="date-picker-actions">
             <button class="date-picker-clear" id="clearDate">Очистить</button>
             <button class="date-picker-close" id="closeDatePicker">Закрыть</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div class="settings-modal" id="settingsModal">
+        <div class="settings-overlay" id="settingsOverlay"></div>
+        <div class="settings-content">
+          <div class="settings-header">
+            <div class="settings-title">⚙️ Настройки</div>
+            <button class="settings-close" id="settingsClose">✕</button>
+          </div>
+          
+          <div class="settings-section">
+            <div class="settings-section-title">📝 К выполнению</div>
+            <div class="settings-row">
+              <span class="settings-label">Размер шрифта</span>
+              <div class="settings-control">
+                <input type="range" id="fontSizeTodo" min="10" max="24" value="15">
+                <span class="size-value" id="fontSizeTodoValue">15px</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Жирный шрифт</span>
+              <div class="settings-toggle" id="boldTodo" data-section="todo"></div>
+            </div>
+          </div>
+          
+          <div class="settings-section">
+            <div class="settings-section-title">🔄 В работе</div>
+            <div class="settings-row">
+              <span class="settings-label">Размер шрифта</span>
+              <div class="settings-control">
+                <input type="range" id="fontSizeInProgress" min="10" max="24" value="15">
+                <span class="size-value" id="fontSizeInProgressValue">15px</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Жирный шрифт</span>
+              <div class="settings-toggle" id="boldInProgress" data-section="inprogress"></div>
+            </div>
+          </div>
+          
+          <div class="settings-section">
+            <div class="settings-section-title">✅ Готово</div>
+            <div class="settings-row">
+              <span class="settings-label">Размер шрифта</span>
+              <div class="settings-control">
+                <input type="range" id="fontSizeDone" min="10" max="24" value="15">
+                <span class="size-value" id="fontSizeDoneValue">15px</span>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Жирный шрифт</span>
+              <div class="settings-toggle" id="boldDone" data-section="done"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -546,6 +776,132 @@
 
     // Theme toggle event
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Settings Management
+    const SETTINGS_KEY = 'app_settings';
+    const defaultSettings = {
+      fontSizeTodo: 15,
+      fontSizeInProgress: 15,
+      fontSizeDone: 15,
+      boldTodo: false,
+      boldInProgress: false,
+      boldDone: false
+    };
+
+    function getStoredSettings() {
+      const stored = localStorage.getItem(SETTINGS_KEY);
+      if (stored) {
+        try {
+          return { ...defaultSettings, ...JSON.parse(stored) };
+        } catch (e) {
+          console.error('Error parsing settings:', e);
+          return defaultSettings;
+        }
+      }
+      return defaultSettings;
+    }
+
+    function saveSettings(settings) {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    function applySettings(settings) {
+      console.log('Applying settings:', settings);
+      document.documentElement.style.setProperty('--font-size-todo', settings.fontSizeTodo + 'px');
+      document.documentElement.style.setProperty('--font-size-inprogress', settings.fontSizeInProgress + 'px');
+      document.documentElement.style.setProperty('--font-size-done', settings.fontSizeDone + 'px');
+      document.documentElement.style.setProperty('--font-weight-todo', settings.boldTodo ? '700' : '500');
+      document.documentElement.style.setProperty('--font-weight-inprogress', settings.boldInProgress ? '700' : '500');
+      document.documentElement.style.setProperty('--font-weight-done', settings.boldDone ? '700' : '500');
+      
+      // Update UI controls
+      document.getElementById('fontSizeTodo').value = settings.fontSizeTodo;
+      document.getElementById('fontSizeTodoValue').textContent = settings.fontSizeTodo + 'px';
+      document.getElementById('fontSizeInProgress').value = settings.fontSizeInProgress;
+      document.getElementById('fontSizeInProgressValue').textContent = settings.fontSizeInProgress + 'px';
+      document.getElementById('fontSizeDone').value = settings.fontSizeDone;
+      document.getElementById('fontSizeDoneValue').textContent = settings.fontSizeDone + 'px';
+      
+      // Update bold toggles
+      const boldTodo = document.getElementById('boldTodo');
+      const boldInProgress = document.getElementById('boldInProgress');
+      const boldDone = document.getElementById('boldDone');
+      
+      boldTodo.classList.toggle('active', settings.boldTodo);
+      boldInProgress.classList.toggle('active', settings.boldInProgress);
+      boldDone.classList.toggle('active', settings.boldDone);
+    }
+
+    function openSettings() {
+      console.log('Opening settings modal');
+      const settings = getStoredSettings();
+      applySettings(settings);
+      document.getElementById('settingsModal').classList.add('active');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    // Initialize settings
+    const currentSettings = getStoredSettings();
+    applySettings(currentSettings);
+    console.log('Settings initialized:', currentSettings);
+
+    // Settings event listeners
+    document.getElementById('settingsBtn').addEventListener('click', openSettings);
+    document.getElementById('settingsClose').addEventListener('click', closeSettings);
+    document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
+
+    // Font size controls
+    document.getElementById('fontSizeTodo').addEventListener('input', function() {
+      const value = parseInt(this.value);
+      document.getElementById('fontSizeTodoValue').textContent = value + 'px';
+      const settings = getStoredSettings();
+      settings.fontSizeTodo = value;
+      saveSettings(settings);
+      applySettings(settings);
+    });
+
+    document.getElementById('fontSizeInProgress').addEventListener('input', function() {
+      const value = parseInt(this.value);
+      document.getElementById('fontSizeInProgressValue').textContent = value + 'px';
+      const settings = getStoredSettings();
+      settings.fontSizeInProgress = value;
+      saveSettings(settings);
+      applySettings(settings);
+    });
+
+    document.getElementById('fontSizeDone').addEventListener('input', function() {
+      const value = parseInt(this.value);
+      document.getElementById('fontSizeDoneValue').textContent = value + 'px';
+      const settings = getStoredSettings();
+      settings.fontSizeDone = value;
+      saveSettings(settings);
+      applySettings(settings);
+    });
+
+    // Bold toggles
+    document.getElementById('boldTodo').addEventListener('click', function() {
+      const settings = getStoredSettings();
+      settings.boldTodo = !settings.boldTodo;
+      saveSettings(settings);
+      applySettings(settings);
+    });
+
+    document.getElementById('boldInProgress').addEventListener('click', function() {
+      const settings = getStoredSettings();
+      settings.boldInProgress = !settings.boldInProgress;
+      saveSettings(settings);
+      applySettings(settings);
+    });
+
+    document.getElementById('boldDone').addEventListener('click', function() {
+      const settings = getStoredSettings();
+      settings.boldDone = !settings.boldDone;
+      saveSettings(settings);
+      applySettings(settings);
+    });
 
     // API URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbwOmfbiY6qcoZtJJFyazXATEQKiVakQoFvRtVBwJbtGIFQUlhxFSiXlL89mI2_cxEg0/exec';
@@ -957,7 +1313,7 @@
 
       items.forEach(task => {
         const card = document.createElement('div');
-        card.className = 'task-card';
+        card.className = 'task-card ' + activeStatus;
 
         const titleEl = document.createElement('div');
         titleEl.className = 'task-title';
