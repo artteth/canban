@@ -322,6 +322,132 @@
       border: 1px solid var(--border-color-strong);
     }
     .task-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Custom Date Picker Modal */
+    .date-picker-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+    }
+    .date-picker-modal.active {
+      display: block;
+    }
+    .date-picker-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .date-picker-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .date-picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .date-picker-nav {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    #currentMonthYear {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .date-picker-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .date-picker-weekdays span {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 5px;
+    }
+    .date-picker-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .date-picker-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    .date-picker-day:hover {
+      background: var(--bg-secondary);
+    }
+    .date-picker-day.selected {
+      background: var(--accent-color);
+      color: #fff;
+    }
+    .date-picker-day.today {
+      border: 2px solid var(--accent-color);
+    }
+    .date-picker-day.other-month {
+      opacity: 0.3;
+    }
+    .date-picker-day.disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+    .date-picker-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .date-picker-clear, .date-picker-close {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .date-picker-clear {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .date-picker-close {
+      background: var(--accent-color);
+      border: none;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -351,6 +477,26 @@
           <input type="date" id="plannedDateInput" class="date-input" />
         </div>
         <div class="date-display" id="dateDisplay"></div>
+      </div>
+
+      <!-- Custom Date Picker Modal -->
+      <div class="date-picker-modal" id="datePickerModal">
+        <div class="date-picker-overlay" id="datePickerOverlay"></div>
+        <div class="date-picker-content">
+          <div class="date-picker-header">
+            <button class="date-picker-nav" id="prevMonth">&lt;</button>
+            <span id="currentMonthYear"></span>
+            <button class="date-picker-nav" id="nextMonth">&gt;</button>
+          </div>
+          <div class="date-picker-weekdays">
+            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+          </div>
+          <div class="date-picker-days" id="datePickerDays"></div>
+          <div class="date-picker-actions">
+            <button class="date-picker-clear" id="clearDate">Очистить</button>
+            <button class="date-picker-close" id="closeDatePicker">Закрыть</button>
+          </div>
+        </div>
       </div>
 
       <div class="add-footer">
@@ -602,21 +748,119 @@
         haptic('light');
       });
 
-      btnCalendar.addEventListener('click', () => {
-        dateInput.min = getTodayStr();
-        // Toggle active state
-        if (btnCalendar.classList.contains('active')) {
-          btnCalendar.classList.remove('active');
-          dateInput.value = '';
-          setSelectedDateText('');
-          setActiveQuick(null);
+      // Custom Date Picker
+      let pickerYear, pickerMonth;
+      const datePickerModal = document.getElementById('datePickerModal');
+      const datePickerDays = document.getElementById('datePickerDays');
+      const currentMonthYear = document.getElementById('currentMonthYear');
+      
+      function openDatePicker() {
+        const currentValue = dateInput.value;
+        if (currentValue) {
+          const [y, m, d] = currentValue.split('-').map(Number);
+          pickerYear = y;
+          pickerMonth = m - 1;
         } else {
-          btnCalendar.classList.add('active');
-          if (typeof dateInput.showPicker === 'function') {
-            dateInput.showPicker();
-          } else {
-            dateInput.click();
-          }
+          const today = new Date();
+          pickerYear = today.getFullYear();
+          pickerMonth = today.getMonth();
+        }
+        renderDatePicker();
+        datePickerModal.classList.add('active');
+        btnCalendar.classList.add('active');
+      }
+      
+      function closeDatePicker() {
+        datePickerModal.classList.remove('active');
+      }
+      
+      function renderDatePicker() {
+        const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        currentMonthYear.textContent = months[pickerMonth] + ' ' + pickerYear;
+        
+        const today = new Date();
+        const todayStr = getTodayStr();
+        const firstDay = new Date(pickerYear, pickerMonth, 1);
+        const lastDay = new Date(pickerYear, pickerMonth + 1, 0);
+        const startingDay = (firstDay.getDay() + 6) % 7; // Monday = 0
+        
+        let html = '';
+        const selectedValue = dateInput.value;
+        
+        // Previous month days
+        const prevMonthLastDay = new Date(pickerYear, pickerMonth, 0).getDate();
+        for (let i = startingDay - 1; i >= 0; i--) {
+          const day = prevMonthLastDay - i;
+          html += '<span class="date-picker-day other-month" data-day="' + day + '" data-month="' + (pickerMonth - 1) + '" data-year="' + pickerYear + '">' + day + '</span>';
+        }
+        
+        // Current month days
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+          const dateStr = pickerYear + '-' + String(pickerMonth + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+          let classes = 'date-picker-day';
+          if (dateStr === todayStr) classes += ' today';
+          if (dateStr === selectedValue) classes += ' selected';
+          if (dateStr < todayStr) classes += ' disabled';
+          html += '<span class="' + classes + '" data-day="' + day + '" data-month="' + pickerMonth + '" data-year="' + pickerYear + '">' + day + '</span>';
+        }
+        
+        // Next month days
+        const remainingDays = 42 - (startingDay + lastDay.getDate());
+        for (let day = 1; day <= remainingDays; day++) {
+          html += '<span class="date-picker-day other-month" data-day="' + day + '" data-month="' + (pickerMonth + 1) + '" data-year="' + pickerYear + '">' + day + '</span>';
+        }
+        
+        datePickerDays.innerHTML = html;
+        
+        // Add click handlers
+        datePickerDays.querySelectorAll('.date-picker-day:not(.disabled)').forEach(el => {
+          el.addEventListener('click', () => {
+            const day = el.dataset.day;
+            const month = parseInt(el.dataset.month) + 1;
+            const year = el.dataset.year;
+            const dateStr = year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+            dateInput.value = dateStr;
+            setSelectedDateText(dateStr);
+            closeDatePicker();
+            haptic('light');
+          });
+        });
+      }
+      
+      document.getElementById('prevMonth').addEventListener('click', () => {
+        pickerMonth--;
+        if (pickerMonth < 0) {
+          pickerMonth = 11;
+          pickerYear--;
+        }
+        renderDatePicker();
+      });
+      
+      document.getElementById('nextMonth').addEventListener('click', () => {
+        pickerMonth++;
+        if (pickerMonth > 11) {
+          pickerMonth = 0;
+          pickerYear++;
+        }
+        renderDatePicker();
+      });
+      
+      document.getElementById('datePickerOverlay').addEventListener('click', closeDatePicker);
+      document.getElementById('closeDatePicker').addEventListener('click', closeDatePicker);
+      document.getElementById('clearDate').addEventListener('click', () => {
+        dateInput.value = '';
+        setSelectedDateText('');
+        btnCalendar.classList.remove('active');
+        setActiveQuick(null);
+        closeDatePicker();
+        haptic('light');
+      });
+
+      btnCalendar.addEventListener('click', () => {
+        if (datePickerModal.classList.contains('active')) {
+          closeDatePicker();
+        } else {
+          openDatePicker();
         }
       });
 
