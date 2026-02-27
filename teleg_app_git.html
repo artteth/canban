@@ -490,23 +490,44 @@
       });
 
       function setActiveQuick(button) {
-        [btnToday, btnTomorrow].forEach(b => b.classList.remove('active'));
-        if (button) button.classList.add('active');
+        [btnToday, btnTomorrow].forEach(b => {
+          if (button && b === button && b.classList.contains('active')) {
+            b.classList.remove('active');
+          } else if (button && b === button) {
+            b.classList.add('active');
+          } else {
+            b.classList.remove('active');
+          }
+        });
       }
 
       btnToday.addEventListener('click', () => {
         const v = getTodayStr();
-        dateInput.value = v;
-        setSelectedDateText(v);
-        setActiveQuick(btnToday);
+        const isActive = btnToday.classList.contains('active');
+        if (isActive) {
+          dateInput.value = '';
+          setSelectedDateText('');
+          setActiveQuick(btnToday);
+        } else {
+          dateInput.value = v;
+          setSelectedDateText(v);
+          setActiveQuick(btnToday);
+        }
         haptic('light');
       });
 
       btnTomorrow.addEventListener('click', () => {
         const v = getDateOffsetStr(getTodayStr(), 1);
-        dateInput.value = v;
-        setSelectedDateText(v);
-        setActiveQuick(btnTomorrow);
+        const isActive = btnTomorrow.classList.contains('active');
+        if (isActive) {
+          dateInput.value = '';
+          setSelectedDateText('');
+          setActiveQuick(btnTomorrow);
+        } else {
+          dateInput.value = v;
+          setSelectedDateText(v);
+          setActiveQuick(btnTomorrow);
+        }
         haptic('light');
       });
 
