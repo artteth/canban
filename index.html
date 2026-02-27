@@ -242,7 +242,7 @@
       <button class="tab-btn active" data-status="todo" id="tabTodo">
         📝 К выполнению <span class="count" id="countTodo">0</span>
       </button>
-      <button class="tab-btn" data-status="in-progress" id="tabInProgress">
+      <button class="tab-btn" data-status="inprogress" id="tabInProgress">
         🔄 В работе <span class="count" id="countInProgress">0</span>
       </button>
       <button class="tab-btn" data-status="done" id="tabDone">
@@ -328,23 +328,58 @@
       el.innerHTML = 'Запланировано на <span>' + formatDateWithDay(value) + '</span>';
     }
 
+    // GET запрос для получения данных (работает лучше, чем POST)
+    async function apiGet(action, extraParams = {}) {
+      console.log('API GET Request:', action, extraParams);
+      const params = new URLSearchParams({ mode: 'tg-api', action, ...extraParams });
+      const url = `${API_URL}?${params}`;
+      console.log('API URL:', url);
+      try {
+        const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+        console.log('Response status:', res.status);
+        const text = await res.text();
+        console.log('Response text:', text.substring(0, 500));
+        const data = JSON.parse(text);
+        if (!data.ok) throw new Error(data.error || 'API error');
+        return data.data;
+      } catch (e) {
+        console.error('API GET Error:', e);
+        throw e;
+      }
+    }
+
+    // POST запрос для отправки данных (добавление/изменение задач)
     async function apiPost(payload) {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, _tgApiMode: true }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'API error');
-      return data.data;
+      console.log('API POST Request:', payload);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, _tgApiMode: true }),
+          redirect: 'follow'
+        });
+        console.log('Response status:', res.status);
+        const text = await res.text();
+        console.log('Response text:', text.substring(0, 500));
+        const data = JSON.parse(text);
+        if (!data.ok) throw new Error(data.error || 'API error');
+        return data.data;
+      } catch (e) {
+        console.error('API POST Error:', e);
+        throw e;
+      }
     }
 
     async function loadTasks() {
+      console.log('Loading tasks from:', API_URL);
       try {
-        const data = await apiPost({ action: 'getTasks' });
+        // Используем GET запрос вместо POST
+        const data = await apiGet('getTasks');
+        console.log('Tasks loaded:', data);
         tasks = data || [];
         renderAll();
       } catch (e) {
+        console.error('Load tasks error:', e);
         const list = document.getElementById('taskList');
         if (list) list.innerHTML = '<div class="empty-text">Ошибка загрузки: ' + e.message + '</div>';
       }
@@ -432,6 +467,7 @@
           input.value = '';
           dateInput.value = '';
           setSelectedDateText('');
+          document.getElementById('countInProgress').textContent = tasks.filter(t => t.status === 'inprogress').length;
         } catch (e) {
           alert('Ошибка: ' + e.message);
           haptic('error');
@@ -458,7 +494,7 @@
 
     function updateTabCounts() {
       const todo = tasks.filter(t => t.status === 'todo').length;
-      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+      const inProgress = tasks.filter(t => t.status === 'inprogress').length;
       const done = tasks.filter(t => t.status === 'done').length;
       document.getElementById('countTodo').textContent = todo;
       document.getElementById('countInProgress').textContent = inProgress;
@@ -533,9 +569,9 @@
           const main = document.createElement('button');
           main.className = 'task-btn task-btn-main';
           main.textContent = 'В работу';
-          main.onclick = () => changeStatus(task.id, 'in-progress');
+          main.onclick = () => changeStatus(task.id, 'inprogress');
           actions.appendChild(main);
-        } else if (activeStatus === 'in-progress') {
+        } else if (activeStatus === 'inprogress') {
           const back = document.createElement('button');
           back.className = 'task-btn task-btn-secondary';
           back.textContent = 'Назад';
@@ -551,7 +587,7 @@
           const back = document.createElement('button');
           back.className = 'task-btn task-btn-secondary';
           back.textContent = 'Вернуть в работу';
-          back.onclick = () => changeStatus(task.id, 'in-progress');
+          back.onclick = () => changeStatus(task.id, 'inprogress');
           actions.appendChild(back);
         }
 
