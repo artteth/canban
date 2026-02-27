@@ -329,7 +329,7 @@
     }
 
     async function apiPost(payload) {
-      const res = await fetch(API_URL, {
+      const res = await fetch(API_URL + '?mode=tg-api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
