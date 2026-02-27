@@ -328,53 +328,41 @@
       el.innerHTML = 'Запланировано на <span>' + formatDateWithDay(value) + '</span>';
     }
 
-    // GET запрос для получения данных (работает лучше, чем POST)
-    async function apiGet(action, extraParams = {}) {
-      console.log('API GET Request:', action, extraParams);
-      const params = new URLSearchParams({ mode: 'tg-api', action, ...extraParams });
-      const url = `${API_URL}?${params}`;
-      console.log('API URL:', url);
-      try {
-        const res = await fetch(url, { method: 'GET', redirect: 'follow' });
-        console.log('Response status:', res.status);
-        const text = await res.text();
-        console.log('Response text:', text.substring(0, 500));
-        const data = JSON.parse(text);
-        if (!data.ok) throw new Error(data.error || 'API error');
-        return data.data;
-      } catch (e) {
-        console.error('API GET Error:', e);
-        throw e;
-      }
-    }
-
-    // POST запрос для отправки данных (добавление/изменение задач)
-    async function apiPost(payload) {
-      console.log('API POST Request:', payload);
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, _tgApiMode: true }),
-          redirect: 'follow'
-        });
-        console.log('Response status:', res.status);
-        const text = await res.text();
-        console.log('Response text:', text.substring(0, 500));
-        const data = JSON.parse(text);
-        if (!data.ok) throw new Error(data.error || 'API error');
-        return data.data;
-      } catch (e) {
-        console.error('API POST Error:', e);
-        throw e;
-      }
+    // JSONP запрос для обхода CORS с GitHub Pages
+    function apiJsonp(action) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now();
+        const params = new URLSearchParams({ mode: 'jsonp', action, callback: callbackName });
+        const url = `${API_URL}?${params}`;
+        console.log('JSONP URL:', url);
+        
+        // Создаём script тег
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => reject(new Error('JSONP request failed'));
+        
+        // Функция обратного вызова
+        window[callbackName] = (response) => {
+          console.log('JSONP response:', response);
+          if (response && response.ok) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response?.error || 'API error'));
+          }
+          // Очищаем
+          delete window[callbackName];
+          document.body.removeChild(script);
+        };
+        
+        document.body.appendChild(script);
+      });
     }
 
     async function loadTasks() {
       console.log('Loading tasks from:', API_URL);
       try {
-        // Используем GET запрос вместо POST
-        const data = await apiGet('getTasks');
+        // Используем JSONP для обхода CORS
+        const data = await apiJsonp('getTasks');
         console.log('Tasks loaded:', data);
         tasks = data || [];
         renderAll();
@@ -461,7 +449,7 @@
         btnAdd.disabled = true;
         haptic('success');
         try {
-          const data = await apiPost({ action: 'addTask', title, plannedDate: planned });
+          const data = await apiJsonp('addTask');
           tasks = data || [];
           renderAll();
           input.value = '';
