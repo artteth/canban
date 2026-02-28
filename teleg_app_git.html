@@ -276,7 +276,7 @@
       margin-top: 16px;
       padding: 16px;
       border-radius: 12px;
-      background: white;
+      background: var(--bg-card);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border: 1px solid rgba(0,0,0,0.05);
       transition: all 0.3s;
@@ -295,6 +295,7 @@
       outline: none;
       min-height: 82px;
       transition: all 0.3s;
+      caret-color: var(--accent-color);
     }
     .add-textarea::placeholder { color: var(--text-muted); }
     .add-date-row { margin-top: 10px; }
@@ -418,6 +419,10 @@
       background: rgba(255,255,255,0.3);
       color: #fff;
     }
+    [data-theme="dark"] .tab-btn.active span.count {
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+    }
     .task-list.todo { background: var(--bg-todo); border-radius: var(--radius); padding: 14px; }
     .task-list.in-progress { background: var(--bg-progress); border-radius: var(--radius); padding: 14px; }
     .task-list.done { background: var(--bg-done); border-radius: var(--radius); padding: 14px; }
@@ -430,7 +435,7 @@
     .task-card {
       border-radius: 10px;
       padding: 14px;
-      background: white;
+      background: var(--bg-card);
       margin-bottom: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
       border-left: 4px solid;
@@ -466,6 +471,12 @@
     .planned-overdue { background: #ffcdd2 !important; color: #c62828 !important; }
     .planned-future { }
     
+    [data-theme="dark"] .task-card.todo .task-planned { background: #3d2a10; color: #ffb74d; }
+    [data-theme="dark"] .task-card.in-progress .task-planned { background: #0d2137; color: #64b5f6; }
+    [data-theme="dark"] .task-card.done .task-planned { background: #0d2818; color: #81c784; }
+    [data-theme="dark"] .planned-today { background: #3d0f0f !important; color: #ef9a9a !important; }
+    [data-theme="dark"] .planned-overdue { background: #3d0f0f !important; color: #ef9a9a !important; }
+    
     .task-meta { font-size: 11px; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 4px; }
     .task-meta span + span::before { content: "•"; margin: 0 4px; opacity: 0.5; }
     .task-actions { margin-top: 8px; display: flex; gap: 6px; }
@@ -488,7 +499,7 @@
     .task-card.in-progress .task-btn-main { background: var(--accent-progress); color: #fff; }
     .task-card.done .task-btn-main { background: var(--accent-done); color: #fff; }
     .task-btn-secondary {
-      background: rgba(255,255,255,0.8);
+      background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border-color);
     }
