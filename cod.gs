@@ -409,7 +409,7 @@ function doPost(e) {
         let message = '*📋 Список задач:*\n\n';
         
         const todoTasks = tasks.filter(t => t.status === 'todo');
-        const inProgressTasks = tasks.filter(t => t.status === 'inprogress');
+        const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
         const doneTasks = tasks.filter(t => t.status === 'done');
         
         if (todoTasks.length > 0) {
@@ -558,7 +558,7 @@ function showTaskList(chatId) {
   let message = '*📋 Список задач:*\n\n';
   
   const todoTasks = tasks.filter(t => t.status === 'todo');
-  const inProgressTasks = tasks.filter(t => t.status === 'inprogress');
+  const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
   const doneTasks = tasks.filter(t => t.status === 'done');
   
   if (todoTasks.length > 0) {

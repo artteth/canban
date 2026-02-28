@@ -244,7 +244,7 @@
     }
 
     .task-card.todo .task-title { font-size: var(--font-size-todo); font-weight: var(--font-weight-todo); }
-    .task-card.inprogress .task-title { font-size: var(--font-size-inprogress); font-weight: var(--font-weight-inprogress); }
+    .task-card.in-progress .task-title { font-size: var(--font-size-inprogress); font-weight: var(--font-weight-inprogress); }
     .task-card.done .task-title { font-size: var(--font-size-done); font-weight: var(--font-weight-done); }
 
     .add-card {
@@ -708,7 +708,7 @@
             </div>
             <div class="settings-row">
               <span class="settings-label">Жирный шрифт</span>
-              <div class="settings-toggle" id="boldInProgress" data-section="inprogress"></div>
+              <div class="settings-toggle" id="boldInProgress" data-section="in-progress"></div>
             </div>
           </div>
           
@@ -738,7 +738,7 @@
       <button class="tab-btn active" data-status="todo" id="tabTodo">
         📝 К выполнению <span class="count" id="countTodo">0</span>
       </button>
-      <button class="tab-btn" data-status="inprogress" id="tabInProgress">
+      <button class="tab-btn" data-status="in-progress" id="tabInProgress">
         🔄 В работе <span class="count" id="countInProgress">0</span>
       </button>
       <button class="tab-btn" data-status="done" id="tabDone">
@@ -1244,7 +1244,7 @@
           input.value = '';
           dateInput.value = '';
           setSelectedDateText('');
-          document.getElementById('countInProgress').textContent = tasks.filter(t => t.status === 'inprogress').length;
+          document.getElementById('countInProgress').textContent = tasks.filter(t => t.status === 'in-progress').length;
         } catch (e) {
           alert('Ошибка: ' + e.message);
           haptic('error');
@@ -1271,7 +1271,7 @@
 
     function updateTabCounts() {
       const todo = tasks.filter(t => t.status === 'todo').length;
-      const inProgress = tasks.filter(t => t.status === 'inprogress').length;
+      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
       const done = tasks.filter(t => t.status === 'done').length;
       document.getElementById('countTodo').textContent = todo;
       document.getElementById('countInProgress').textContent = inProgress;
@@ -1346,9 +1346,9 @@
           const main = document.createElement('button');
           main.className = 'task-btn task-btn-main';
           main.textContent = 'В работу';
-          main.onclick = () => changeStatus(task.id, 'inprogress');
+          main.onclick = () => changeStatus(task.id, 'in-progress');
           actions.appendChild(main);
-        } else if (activeStatus === 'inprogress') {
+        } else if (activeStatus === 'in-progress') {
           const back = document.createElement('button');
           back.className = 'task-btn task-btn-secondary';
           back.textContent = 'Назад';
@@ -1364,7 +1364,7 @@
           const back = document.createElement('button');
           back.className = 'task-btn task-btn-secondary';
           back.textContent = 'Вернуть в работу';
-          back.onclick = () => changeStatus(task.id, 'inprogress');
+          back.onclick = () => changeStatus(task.id, 'in-progress');
           actions.appendChild(back);
         }
 
