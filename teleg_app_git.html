@@ -7,33 +7,46 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f9fafb;
+      --bg-primary: #e8eef5;
+      --bg-secondary: #dee3ea;
       --bg-card: #ffffff;
-      --text-primary: #111827;
-      --text-secondary: #6b7280;
-      --text-muted: #9ca3af;
-      --border-color: #e5e7eb;
-      --border-color-strong: #d1d5db;
-      --accent-color: #4f46e5;
-      --accent-text: #818cf8;
-      --success-color: #22c55e;
-      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --bg-todo: #fff3e0;
+      --bg-progress: #e3f2fd;
+      --bg-done: #e8f5e9;
+      --text-primary: #37474f;
+      --text-secondary: #78909c;
+      --text-muted: #90a4ae;
+      --border-color: rgba(0,0,0,0.1);
+      --border-color-strong: rgba(0,0,0,0.2);
+      --accent-todo: #ff9800;
+      --accent-progress: #2196f3;
+      --accent-done: #4caf50;
+      --accent-color: #ff9800;
+      --accent-text: #2196f3;
+      --success-color: #4caf50;
+      --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --radius: 16px;
     }
 
     [data-theme="dark"] {
-      --bg-primary: #020617;
-      --bg-secondary: #0f172a;
-      --bg-card: #020617;
-      --text-primary: #e5e7eb;
-      --text-secondary: #9ca3af;
-      --text-muted: #6b7280;
-      --border-color: rgba(148, 163, 184, 0.4);
-      --border-color-strong: rgba(148, 163, 184, 0.7);
-      --accent-color: #4f46e5;
-      --accent-text: #818cf8;
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-todo: #1a1510;
+      --bg-progress: #0f1a20;
+      --bg-done: #0f1a14;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(255,255,255,0.1);
+      --border-color-strong: rgba(255,255,255,0.2);
+      --accent-todo: #f59e0b;
+      --accent-progress: #3b82f6;
+      --accent-done: #22c55e;
+      --accent-color: #f59e0b;
+      --accent-text: #3b82f6;
       --success-color: #22c55e;
-      --card-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+      --card-shadow: 0 8px 16px rgba(0,0,0,0.3);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,20 +61,32 @@
     }
     .app { max-width: 560px; margin: 0 auto; }
     .app-header { 
-      margin-bottom: 10px; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      box-shadow: var(--card-shadow);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--border-color);
     }
-    .app-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-    .app-subtitle { font-size: 13px; opacity: 0.7; }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+    }
+    .app-title { font-size: 22px; font-weight: 600; }
+    .app-subtitle { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     
     /* Theme Toggle */
     .theme-toggle {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 20px;
       padding: 8px 12px;
       cursor: pointer;
@@ -69,17 +94,17 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--text-primary);
+      color: white;
       transition: all 0.3s;
     }
     .theme-toggle:hover {
-      background: var(--bg-secondary);
+      background: rgba(255,255,255,0.3);
     }
 
     /* Settings Button */
     .settings-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 20px;
       padding: 8px 12px;
       cursor: pointer;
@@ -87,12 +112,12 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--text-primary);
+      color: white;
       transition: all 0.3s;
       margin-left: 8px;
     }
     .settings-btn:hover {
-      background: var(--bg-secondary);
+      background: rgba(255,255,255,0.3);
     }
     .header-buttons {
       display: flex;
@@ -235,46 +260,29 @@
 
     /* Font size CSS variables */
     :root {
-      --font-size-todo: 15px;
-      --font-size-inprogress: 15px;
-      --font-size-done: 15px;
-      --font-weight-todo: 500;
-      --font-weight-inprogress: 500;
-      --font-weight-done: 500;
+      --font-size-title: 15px;
+      --font-size-planned: 12px;
+      --font-size-meta: 11px;
+      --font-weight-title: 500;
+      --font-weight-planned: 500;
+      --font-weight-meta: 500;
     }
 
-    .task-card.todo .task-title { font-size: var(--font-size-todo); font-weight: var(--font-weight-todo); }
-    .task-card.in-progress .task-title { font-size: var(--font-size-inprogress); font-weight: var(--font-weight-inprogress); }
-    .task-card.done .task-title { font-size: var(--font-size-done); font-weight: var(--font-weight-done); }
+    .task-title { font-size: var(--font-size-title); font-weight: var(--font-weight-title); }
+    .task-planned { font-size: var(--font-size-planned); font-weight: var(--font-weight-planned); }
+    .task-meta { font-size: var(--font-size-meta); font-weight: var(--font-weight-meta); }
 
     .add-card {
-      margin-top: 10px;
-      padding: 14px 14px 12px 14px;
-      border-radius: 16px;
-      background: var(--bg-card);
-      box-shadow: var(--card-shadow);
-      border: 1px solid var(--border-color);
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.05);
       transition: all 0.3s;
       position: relative;
-      overflow: hidden;
     }
-    .add-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #4f46e5, #818cf8, #4f46e5);
-      background-size: 200% 100%;
-      animation: gradientMove 3s ease infinite;
-    }
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .add-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; opacity: 0.9; }
+    .add-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
     .add-textarea {
       width: 100%;
       border-radius: 12px;
@@ -387,31 +395,32 @@
       gap: 6px;
       transition: all 0.3s;
     }
-    .tab-btn span.count {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-color);
+    .tab-btn[data-status="todo"] span.count { background: var(--accent-todo); color: white; }
+    .tab-btn[data-status="in-progress"] span.count { background: var(--accent-progress); color: white; }
+    .tab-btn[data-status="done"] span.count { background: var(--accent-done); color: white; }
+    
+    .tab-btn[data-status="todo"].active {
+      border-color: var(--accent-todo);
+      background: var(--accent-todo);
       color: #fff;
-      font-weight: 600;
     }
-    .tab-btn.active {
-      border-color: var(--accent-color);
-      background: var(--accent-color);
+    .tab-btn[data-status="in-progress"].active {
+      border-color: var(--accent-progress);
+      background: var(--accent-progress);
       color: #fff;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+    .tab-btn[data-status="done"].active {
+      border-color: var(--accent-done);
+      background: var(--accent-done);
+      color: #fff;
     }
     .tab-btn.active span.count {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.3);
       color: #fff;
     }
-    .task-list {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-bottom: 8px;
-    }
+    .task-list.todo { background: var(--bg-todo); border-radius: var(--radius); padding: 14px; }
+    .task-list.in-progress { background: var(--bg-progress); border-radius: var(--radius); padding: 14px; }
+    .task-list.done { background: var(--bg-done); border-radius: var(--radius); padding: 14px; }
     .empty-text {
       font-size: 13px;
       opacity: 0.6;
@@ -419,28 +428,21 @@
       padding: 18px 10px;
     }
     .task-card {
-      border-radius: 14px;
-      padding: 12px 12px 10px 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      transition: all 0.3s;
+      border-radius: 10px;
+      padding: 14px;
+      background: white;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border-left: 4px solid;
+      transition: transform 0.2s;
       position: relative;
-      overflow: hidden;
-    }
-    .task-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: linear-gradient(180deg, #4f46e5, #818cf8);
-      border-radius: 14px 0 0 14px;
     }
     .task-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--card-shadow);
+      transform: translateX(3px);
     }
+    .task-card.todo { border-left-color: var(--accent-todo); }
+    .task-card.in-progress { border-left-color: var(--accent-progress); }
+    .task-card.done { border-left-color: var(--accent-done); }
     .task-title {
       font-size: 15px;
       font-weight: 500;
@@ -450,31 +452,27 @@
       word-wrap: break-word;
     }
     .task-planned {
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      font-size: 10px;
       padding: 3px 8px;
-      border-radius: 999px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color-strong);
-      transition: all 0.3s;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      font-weight: 500;
+      display: inline-block;
     }
-    .planned-today { border-color: #f97316; color: #fed7aa; }
-    .planned-overdue { border-color: #dc2626; color: #fecaca; }
-    .planned-future { border-color: #38bdf8; color: #bae6fd; }
-    [data-theme="light"] .planned-today { border-color: #ea580c; color: #c2410c; }
-    [data-theme="light"] .planned-overdue { border-color: #dc2626; color: #dc2626; }
-    [data-theme="light"] .planned-future { border-color: #0284c7; color: #0284c7; }
-    .task-meta { font-size: 11px; opacity: 0.65; transition: all 0.3s; }
+    .task-card.todo .task-planned { background: #ffe0b2; color: #e65100; }
+    .task-card.in-progress .task-planned { background: #bbdefb; color: #1565c0; }
+    .task-card.done .task-planned { background: #c8e6c9; color: #2e7d32; text-decoration: line-through; }
+    .planned-today { background: #ffcdd2 !important; color: #c62828 !important; }
+    .planned-overdue { background: #ffcdd2 !important; color: #c62828 !important; }
+    .planned-future { }
+    
+    .task-meta { font-size: 11px; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 4px; }
     .task-meta span + span::before { content: "•"; margin: 0 4px; opacity: 0.5; }
     .task-actions { margin-top: 8px; display: flex; gap: 6px; }
     .task-btn {
       flex: 1;
       padding: 7px 8px;
-      border-radius: 999px;
+      border-radius: 8px;
       border: none;
       font-size: 13px;
       font-weight: 500;
@@ -486,11 +484,13 @@
       gap: 4px;
       transition: all 0.3s;
     }
-    .task-btn-main { background: var(--accent-color); color: #fff; }
+    .task-card.todo .task-btn-main { background: var(--accent-todo); color: #fff; }
+    .task-card.in-progress .task-btn-main { background: var(--accent-progress); color: #fff; }
+    .task-card.done .task-btn-main { background: var(--accent-done); color: #fff; }
     .task-btn-secondary {
-      background: var(--bg-card);
+      background: rgba(255,255,255,0.8);
       color: var(--text-primary);
-      border: 1px solid var(--border-color-strong);
+      border: 1px solid var(--border-color);
     }
     .task-btn:disabled { opacity: 0.4; cursor: default; }
 
@@ -624,11 +624,11 @@
 <body>
   <div class="app">
     <header class="app-header">
-      <div>
+      <div class="header-left">
         <div class="app-title">Задачи</div>
         <div class="app-subtitle">Сначала записать, потом разбирать</div>
       </div>
-      <div class="header-buttons">
+      <div class="header-right">
         <button class="theme-toggle" id="themeToggle" title="Сменить тему">
           <span id="themeIcon">🌙</span>
         </button>
@@ -683,47 +683,47 @@
           </div>
           
           <div class="settings-section">
-            <div class="settings-section-title">📝 К выполнению</div>
+            <div class="settings-section-title">📝 Заголовок задач</div>
             <div class="settings-row">
               <span class="settings-label">Размер шрифта</span>
               <div class="settings-control">
-                <input type="range" id="fontSizeTodo" min="10" max="24" value="15">
-                <span class="size-value" id="fontSizeTodoValue">15px</span>
+                <input type="range" id="fontSizeTitle" min="10" max="24" value="15">
+                <span class="size-value" id="fontSizeTitleValue">15px</span>
               </div>
             </div>
             <div class="settings-row">
               <span class="settings-label">Жирный шрифт</span>
-              <div class="settings-toggle" id="boldTodo" data-section="todo"></div>
+              <div class="settings-toggle" id="boldTitle" data-section="title"></div>
             </div>
           </div>
           
           <div class="settings-section">
-            <div class="settings-section-title">🔄 В работе</div>
+            <div class="settings-section-title">📅 Плановая дата</div>
             <div class="settings-row">
               <span class="settings-label">Размер шрифта</span>
               <div class="settings-control">
-                <input type="range" id="fontSizeInProgress" min="10" max="24" value="15">
-                <span class="size-value" id="fontSizeInProgressValue">15px</span>
+                <input type="range" id="fontSizePlanned" min="10" max="24" value="12">
+                <span class="size-value" id="fontSizePlannedValue">12px</span>
               </div>
             </div>
             <div class="settings-row">
               <span class="settings-label">Жирный шрифт</span>
-              <div class="settings-toggle" id="boldInProgress" data-section="in-progress"></div>
+              <div class="settings-toggle" id="boldPlanned" data-section="planned"></div>
             </div>
           </div>
           
           <div class="settings-section">
-            <div class="settings-section-title">✅ Готово</div>
+            <div class="settings-section-title">⏱️ Даты и длительность</div>
             <div class="settings-row">
               <span class="settings-label">Размер шрифта</span>
               <div class="settings-control">
-                <input type="range" id="fontSizeDone" min="10" max="24" value="15">
-                <span class="size-value" id="fontSizeDoneValue">15px</span>
+                <input type="range" id="fontSizeMeta" min="10" max="24" value="11">
+                <span class="size-value" id="fontSizeMetaValue">11px</span>
               </div>
             </div>
             <div class="settings-row">
               <span class="settings-label">Жирный шрифт</span>
-              <div class="settings-toggle" id="boldDone" data-section="done"></div>
+              <div class="settings-toggle" id="boldMeta" data-section="meta"></div>
             </div>
           </div>
         </div>
@@ -780,12 +780,12 @@
     // Settings Management
     const SETTINGS_KEY = 'app_settings';
     const defaultSettings = {
-      fontSizeTodo: 15,
-      fontSizeInProgress: 15,
-      fontSizeDone: 15,
-      boldTodo: false,
-      boldInProgress: false,
-      boldDone: false
+      fontSizeTitle: 15,
+      fontSizePlanned: 12,
+      fontSizeMeta: 11,
+      boldTitle: false,
+      boldPlanned: false,
+      boldMeta: false
     };
 
     function getStoredSettings() {
@@ -807,29 +807,48 @@
 
     function applySettings(settings) {
       console.log('Applying settings:', settings);
-      document.documentElement.style.setProperty('--font-size-todo', settings.fontSizeTodo + 'px');
-      document.documentElement.style.setProperty('--font-size-inprogress', settings.fontSizeInProgress + 'px');
-      document.documentElement.style.setProperty('--font-size-done', settings.fontSizeDone + 'px');
-      document.documentElement.style.setProperty('--font-weight-todo', settings.boldTodo ? '700' : '500');
-      document.documentElement.style.setProperty('--font-weight-inprogress', settings.boldInProgress ? '700' : '500');
-      document.documentElement.style.setProperty('--font-weight-done', settings.boldDone ? '700' : '500');
+      
+      // Apply to task titles
+      document.documentElement.style.setProperty('--font-size-title', settings.fontSizeTitle + 'px');
+      document.documentElement.style.setProperty('--font-weight-title', settings.boldTitle ? '700' : '500');
+      document.querySelectorAll('.task-title').forEach(el => {
+        el.style.fontSize = settings.fontSizeTitle + 'px';
+        el.style.fontWeight = settings.boldTitle ? '700' : '500';
+      });
+      
+      // Apply to planned dates
+      document.documentElement.style.setProperty('--font-size-planned', settings.fontSizePlanned + 'px');
+      document.documentElement.style.setProperty('--font-weight-planned', settings.boldPlanned ? '700' : '500');
+      document.querySelectorAll('.task-planned').forEach(el => {
+        el.style.fontSize = settings.fontSizePlanned + 'px';
+        el.style.fontWeight = settings.boldPlanned ? '700' : '500';
+      });
+      
+      // Apply to meta (dates and duration)
+      document.documentElement.style.setProperty('--font-size-meta', settings.fontSizeMeta + 'px');
+      document.documentElement.style.setProperty('--font-weight-meta', settings.boldMeta ? '700' : '500');
+      document.querySelectorAll('.task-meta').forEach(el => {
+        el.style.fontSize = settings.fontSizeMeta + 'px';
+        el.style.fontWeight = settings.boldMeta ? '700' : '500';
+      });
       
       // Update UI controls
-      document.getElementById('fontSizeTodo').value = settings.fontSizeTodo;
-      document.getElementById('fontSizeTodoValue').textContent = settings.fontSizeTodo + 'px';
-      document.getElementById('fontSizeInProgress').value = settings.fontSizeInProgress;
-      document.getElementById('fontSizeInProgressValue').textContent = settings.fontSizeInProgress + 'px';
-      document.getElementById('fontSizeDone').value = settings.fontSizeDone;
-      document.getElementById('fontSizeDoneValue').textContent = settings.fontSizeDone + 'px';
+      const titleInput = document.getElementById('fontSizeTitle');
+      const plannedInput = document.getElementById('fontSizePlanned');
+      const metaInput = document.getElementById('fontSizeMeta');
       
-      // Update bold toggles
-      const boldTodo = document.getElementById('boldTodo');
-      const boldInProgress = document.getElementById('boldInProgress');
-      const boldDone = document.getElementById('boldDone');
-      
-      boldTodo.classList.toggle('active', settings.boldTodo);
-      boldInProgress.classList.toggle('active', settings.boldInProgress);
-      boldDone.classList.toggle('active', settings.boldDone);
+      if (titleInput) {
+        document.getElementById('fontSizeTitleValue').textContent = settings.fontSizeTitle + 'px';
+        document.getElementById('boldTitle').classList.toggle('active', settings.boldTitle);
+      }
+      if (plannedInput) {
+        document.getElementById('fontSizePlannedValue').textContent = settings.fontSizePlanned + 'px';
+        document.getElementById('boldPlanned').classList.toggle('active', settings.boldPlanned);
+      }
+      if (metaInput) {
+        document.getElementById('fontSizeMetaValue').textContent = settings.fontSizeMeta + 'px';
+        document.getElementById('boldMeta').classList.toggle('active', settings.boldMeta);
+      }
     }
 
     function openSettings() {
@@ -854,51 +873,53 @@
     document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
 
     // Font size controls
-    document.getElementById('fontSizeTodo').addEventListener('input', function() {
+    document.getElementById('fontSizeTitle').addEventListener('input', function() {
       const value = parseInt(this.value);
-      document.getElementById('fontSizeTodoValue').textContent = value + 'px';
+      document.getElementById('fontSizeTitleValue').textContent = value + 'px';
       const settings = getStoredSettings();
-      settings.fontSizeTodo = value;
+      settings.fontSizeTitle = value;
       saveSettings(settings);
       applySettings(settings);
     });
 
-    document.getElementById('fontSizeInProgress').addEventListener('input', function() {
+    document.getElementById('fontSizePlanned').addEventListener('input', function() {
       const value = parseInt(this.value);
-      document.getElementById('fontSizeInProgressValue').textContent = value + 'px';
+      document.getElementById('fontSizePlannedValue').textContent = value + 'px';
       const settings = getStoredSettings();
-      settings.fontSizeInProgress = value;
+      settings.fontSizePlanned = value;
       saveSettings(settings);
       applySettings(settings);
     });
 
-    document.getElementById('fontSizeDone').addEventListener('input', function() {
+    document.getElementById('fontSizeMeta').addEventListener('input', function() {
       const value = parseInt(this.value);
-      document.getElementById('fontSizeDoneValue').textContent = value + 'px';
+      document.getElementById('fontSizeMetaValue').textContent = value + 'px';
       const settings = getStoredSettings();
-      settings.fontSizeDone = value;
+      settings.fontSizeMeta = value;
       saveSettings(settings);
       applySettings(settings);
     });
 
-    // Bold toggles
-    document.getElementById('boldTodo').addEventListener('click', function() {
+    // Bold toggle for title
+    document.getElementById('boldTitle').addEventListener('click', function() {
       const settings = getStoredSettings();
-      settings.boldTodo = !settings.boldTodo;
+      settings.boldTitle = !settings.boldTitle;
       saveSettings(settings);
       applySettings(settings);
     });
 
-    document.getElementById('boldInProgress').addEventListener('click', function() {
+    // Bold toggle for planned
+    document.getElementById('boldPlanned').addEventListener('click', function() {
       const settings = getStoredSettings();
-      settings.boldInProgress = !settings.boldInProgress;
+      settings.boldPlanned = !settings.boldPlanned;
       saveSettings(settings);
       applySettings(settings);
     });
 
-    document.getElementById('boldDone').addEventListener('click', function() {
+    // Bold toggle for meta
+    document.getElementById('boldMeta').addEventListener('click', function() {
       const settings = getStoredSettings();
-      settings.boldDone = !settings.boldDone;
+      settings.boldMeta = !settings.boldMeta;
       saveSettings(settings);
       applySettings(settings);
     });
@@ -1286,6 +1307,9 @@
     function renderTaskList() {
       const list = document.getElementById('taskList');
       if (!list) return;
+
+      // Add status class for colored background
+      list.className = 'task-list ' + activeStatus;
 
       const today = getTodayStr();
       const items = tasks.filter(t => t.status === activeStatus);
