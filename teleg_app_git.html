@@ -788,6 +788,17 @@
     // Theme toggle event
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+    // Keyboard handling - scroll to add card when textarea is focused
+    const newTaskInput = document.getElementById('newTaskInput');
+    const addCard = document.querySelector('.add-card');
+    
+    newTaskInput.addEventListener('focus', function() {
+      // Small delay to let keyboard appear first
+      setTimeout(() => {
+        addCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+
     // Settings Management
     const SETTINGS_KEY = 'app_settings';
     const defaultSettings = {
