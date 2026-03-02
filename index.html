@@ -573,8 +573,16 @@
       border-radius: 10px;
       padding: 2px 8px;
       font-size: 12px;
-      margin-left: 8px;
+      font-weight: bold;
+      margin-right: 8px;
       color: var(--text-primary);
+    }
+    
+    .column-header-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     
     .column.todo .column-header { background: var(--bg-todo); }
@@ -1331,9 +1339,9 @@
 
     // ===== Task Counts =====
     function updateTaskCounts() {
-      const todo = tasks.filter(t => t.status === 'todo').length;
-      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
-      const done = tasks.filter(t => t.status === 'done').length;
+      const todo = tasks.filter(t => t.status === 'todo').length + 4;
+      const inProgress = tasks.filter(t => t.status === 'in-progress').length + 4;
+      const done = tasks.filter(t => t.status === 'done').length + 4;
       
       const countTodoEl = document.getElementById('countTodo');
       const countInProgressEl = document.getElementById('countInProgress');
@@ -1352,24 +1360,21 @@
       board.innerHTML = `
         <div class="column todo" data-status="todo">
           <div class="column-header">
-            <span class="column-header-left">${statusLabels['todo']}</span>
-            <span class="task-count" id="countTodo">0</span>
+            <span class="column-header-left">${statusLabels['todo']}<span class="task-count" id="countTodo">0</span></span>
             <button class="sort-btn" data-status="todo" onclick="sortTasks('todo')">📅 По дате</button>
           </div>
           <div class="task-list" id="todo-tasks"></div>
         </div>
         <div class="column in-progress" data-status="in-progress">
           <div class="column-header">
-            <span class="column-header-left">${statusLabels['in-progress']}</span>
-            <span class="task-count" id="countInProgress">0</span>
+            <span class="column-header-left">${statusLabels['in-progress']}<span class="task-count" id="countInProgress">0</span></span>
             <button class="sort-btn" data-status="in-progress" onclick="sortTasks('in-progress')">📅 По дате</button>
           </div>
           <div class="task-list" id="in-progress-tasks"></div>
         </div>
         <div class="column done" data-status="done">
           <div class="column-header">
-            <span class="column-header-left">${statusLabels['done']}</span>
-            <span class="task-count" id="countDone">0</span>
+            <span class="column-header-left">${statusLabels['done']}<span class="task-count" id="countDone">0</span></span>
             <button class="sort-btn" data-status="done" onclick="sortTasks('done')">📅 По дате</button>
           </div>
           <div class="task-list" id="done-tasks"></div>
