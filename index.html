@@ -125,6 +125,24 @@
     }
     .theme-toggle:hover { background: rgba(255,255,255,0.3); }
 
+    .color-toggle {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      color: white;
+      transition: all 0.3s;
+    }
+    .color-toggle:hover { background: rgba(255,255,255,0.3); }
+    .color-toggle.active { background: var(--accent-color); }
+
+    /* Column colored backgrounds */
+    body.colored-columns .column.todo { background: var(--bg-todo); }
+    body.colored-columns .column.in-progress { background: var(--bg-progress); }
+    body.colored-columns .column.done { background: var(--bg-done); }
+
     /* Settings Button */
     .settings-btn {
       background: rgba(255,255,255,0.2);
@@ -763,6 +781,7 @@
         <div class="app-subtitle">Сначала записать, потом разбирать</div>
       </div>
       <div class="header-right">
+        <button class="color-toggle" id="colorToggle" title="Окрасить столбцы">🎨</button>
         <button class="theme-toggle" id="themeToggle" title="Сменить тему">
           <span id="themeIcon">🌙</span>
         </button>
@@ -933,6 +952,20 @@
     // Initialize theme
     setTheme(getStoredTheme());
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    
+    // Column color toggle
+    const colorToggle = document.getElementById('colorToggle');
+    colorToggle.addEventListener('click', () => {
+      document.body.classList.toggle('colored-columns');
+      colorToggle.classList.toggle('active');
+      localStorage.setItem('coloredColumns', document.body.classList.contains('colored-columns'));
+    });
+    
+    // Restore column color state
+    if (localStorage.getItem('coloredColumns') === 'true') {
+      document.body.classList.add('colored-columns');
+      colorToggle.classList.add('active');
+    }
 
     // ===== Settings Functions =====
     function toggleSettings() {
