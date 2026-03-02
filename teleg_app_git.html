@@ -1335,18 +1335,33 @@
       const today = getTodayStr();
       const items = tasks.filter(t => t.status === activeStatus);
 
-      items.sort((a, b) => {
+      // Split into groups for proper sorting: today first, then overdue, then future, then no date
+      const todayItems = items.filter(t => t.plannedDate === today);
+      const overdueItems = items.filter(t => t.plannedDate && t.plannedDate < today);
+      const futureItems = items.filter(t => t.plannedDate && t.plannedDate > today);
+      const noDateItems = items.filter(t => !t.plannedDate);
+
+      // Sort each group by plannedDate (ascending), then by startDate
+      const sortFn = (a, b) => {
         const ap = a.plannedDate || '';
         const bp = b.plannedDate || '';
         if (ap && bp && ap !== bp) return ap.localeCompare(bp);
         const as = a.startDate || '';
         const bs = b.startDate || '';
         return (bs || '').localeCompare(as || '');
-      });
+      };
+
+      todayItems.sort(sortFn);
+      overdueItems.sort(sortFn);
+      futureItems.sort(sortFn);
+      noDateItems.sort(sortFn);
+
+      // Combine: today first, then overdue, then future, then no date
+      const sortedItems = [...todayItems, ...overdueItems, ...futureItems, ...noDateItems];
 
       list.innerHTML = '';
 
-      if (items.length === 0) {
+      if (sortedItems.length === 0) {
         const div = document.createElement('div');
         div.className = 'empty-text';
         div.textContent = activeStatus === 'todo'
@@ -1356,7 +1371,7 @@
         return;
       }
 
-      items.forEach(task => {
+      sortedItems.forEach(task => {
         const card = document.createElement('div');
         card.className = 'task-card ' + activeStatus;
 

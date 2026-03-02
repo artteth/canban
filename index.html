@@ -1366,7 +1366,12 @@
         const futureGroup = statusTasks.filter(t => t.plannedDate && t.plannedDate > today);
         const noDateGroup = statusTasks.filter(t => !t.plannedDate);
 
-        activeGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        // Split activeGroup into overdue and today (today first, then overdue by date)
+        const overdueGroup = activeGroup.filter(t => t.plannedDate < today);
+        const todayGroup = activeGroup.filter(t => t.plannedDate === today);
+        
+        overdueGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        todayGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
         futureGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
 
         if (sortState[status]) {
@@ -1375,12 +1380,13 @@
             const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
             return sortState[status] === 'asc' ? dateA - dateB : dateB - dateA;
           };
-          activeGroup.sort(sortFn);
+          todayGroup.sort(sortFn);
+          overdueGroup.sort(sortFn);
           futureGroup.sort(sortFn);
           noDateGroup.sort(sortFn);
         }
 
-        const sorted = [...activeGroup, ...futureGroup, ...noDateGroup];
+        const sorted = [...todayGroup, ...overdueGroup, ...futureGroup, ...noDateGroup];
         tasksToRender = tasksToRender.filter(t => t.status !== status).concat(sorted);
       });
 
