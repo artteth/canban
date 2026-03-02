@@ -572,7 +572,7 @@
       background: rgba(255,255,255,0.5);
       border-radius: 10px;
       padding: 2px 8px;
-      font-size: 12px;
+      font-size: 16px;
       font-weight: bold;
       margin-right: 8px;
       color: var(--text-primary);
@@ -1339,9 +1339,9 @@
 
     // ===== Task Counts =====
     function updateTaskCounts() {
-      const todo = tasks.filter(t => t.status === 'todo').length + 4;
-      const inProgress = tasks.filter(t => t.status === 'in-progress').length + 4;
-      const done = tasks.filter(t => t.status === 'done').length + 4;
+      const todo = tasks.filter(t => t.status === 'todo').length;
+      const inProgress = tasks.filter(t => t.status === 'in-progress').length;
+      const done = tasks.filter(t => t.status === 'done').length;
       
       const countTodoEl = document.getElementById('countTodo');
       const countInProgressEl = document.getElementById('countInProgress');
