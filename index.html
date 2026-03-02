@@ -142,6 +142,9 @@
     body.colored-columns .column.todo { background: var(--bg-todo); }
     body.colored-columns .column.in-progress { background: var(--bg-progress); }
     body.colored-columns .column.done { background: var(--bg-done); }
+    body.colored-columns .column.todo .column-header { background: var(--bg-todo-header, var(--bg-todo)); }
+    body.colored-columns .column.in-progress .column-header { background: var(--bg-progress-header, var(--bg-progress)); }
+    body.colored-columns .column.done .column-header { background: var(--bg-done-header, var(--bg-done)); }
 
     /* Settings Button */
     .settings-btn {
@@ -273,6 +276,10 @@
       background: #dc3545;
       color: white;
     }
+
+    .color-settings { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .color-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .color-row input[type="color"] { width: 32px; height: 32px; border: none; border-radius: 4px; cursor: pointer; padding: 0; }
 
     .settings-container { position: relative; }
 
@@ -814,6 +821,25 @@
             <button class="bold-btn" id="boldBtnPlanned" onclick="toggleBold('planned')">Жирная</button>
 
             <button class="reset-btn" onclick="resetFontSettings()" style="margin-top: 12px;">Сбросить всё</button>
+
+            <h3 style="margin-top: 16px;">Цвета столбцов</h3>
+            <div class="color-settings">
+              <div class="color-row">
+                <span>📝 Задания:</span>
+                <input type="color" id="todoHeaderColor" value="#fff3e0" onchange="updateColumnColors()">
+                <input type="color" id="todoBgColor" value="#fff8e1" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>🔄 В работе:</span>
+                <input type="color" id="inProgressHeaderColor" value="#e3f2fd" onchange="updateColumnColors()">
+                <input type="color" id="inProgressBgColor" value="#e3f2fd" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>✅ Готово:</span>
+                <input type="color" id="doneHeaderColor" value="#e8f5e9" onchange="updateColumnColors()">
+                <input type="color" id="doneBgColor" value="#e8f5e9" onchange="updateColumnColors()">
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1010,6 +1036,59 @@
         document.body.style.setProperty(cfg.cssWeightVar, 'normal');
         updateBoldButton(type, false);
       });
+    }
+
+    function updateColumnColors() {
+      const colors = {
+        todo: {
+          header: document.getElementById('todoHeaderColor').value,
+          bg: document.getElementById('todoBgColor').value
+        },
+        inProgress: {
+          header: document.getElementById('inProgressHeaderColor').value,
+          bg: document.getElementById('inProgressBgColor').value
+        },
+        done: {
+          header: document.getElementById('doneHeaderColor').value,
+          bg: document.getElementById('doneBgColor').value
+        }
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('columnColors', JSON.stringify(colors));
+      
+      // Apply colors
+      applyColumnColors(colors);
+      
+      // Auto-enable colored columns
+      document.body.classList.add('colored-columns');
+      document.getElementById('colorToggle').classList.add('active');
+      localStorage.setItem('coloredColumns', 'true');
+    }
+
+    function applyColumnColors(colors) {
+      // Header colors
+      document.documentElement.style.setProperty('--bg-todo-header', colors.todo.header);
+      document.documentElement.style.setProperty('--bg-progress-header', colors.inProgress.header);
+      document.documentElement.style.setProperty('--bg-done-header', colors.done.header);
+      // Body colors (lighter versions)
+      document.documentElement.style.setProperty('--bg-todo', colors.todo.bg);
+      document.documentElement.style.setProperty('--bg-progress', colors.inProgress.bg);
+      document.documentElement.style.setProperty('--bg-done', colors.done.bg);
+    }
+
+    function loadColumnColors() {
+      const saved = localStorage.getItem('columnColors');
+      if (saved) {
+        const colors = JSON.parse(saved);
+        document.getElementById('todoHeaderColor').value = colors.todo.header;
+        document.getElementById('todoBgColor').value = colors.todo.bg;
+        document.getElementById('inProgressHeaderColor').value = colors.inProgress.header;
+        document.getElementById('inProgressBgColor').value = colors.inProgress.bg;
+        document.getElementById('doneHeaderColor').value = colors.done.header;
+        document.getElementById('doneBgColor').value = colors.done.bg;
+        applyColumnColors(colors);
+      }
     }
 
     function toggleBold(type) {
@@ -1700,6 +1779,7 @@
     // ===== Initialization =====
     function init() {
       loadFontSize();
+      loadColumnColors();
       loadTasks();
       // Auto-refresh every 5 seconds
       setInterval(loadTasks, 5000);
