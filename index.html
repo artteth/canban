@@ -1361,21 +1361,21 @@
         <div class="column todo" data-status="todo">
           <div class="column-header">
             <span class="column-header-left">${statusLabels['todo']}<span class="task-count" id="countTodo">0</span></span>
-            <button class="sort-btn" data-status="todo" onclick="sortTasks('todo')">📅 По дате</button>
+            <button class="sort-btn" data-status="todo" onclick="sortTasks('todo')">📅↑↓</button>
           </div>
           <div class="task-list" id="todo-tasks"></div>
         </div>
         <div class="column in-progress" data-status="in-progress">
           <div class="column-header">
             <span class="column-header-left">${statusLabels['in-progress']}<span class="task-count" id="countInProgress">0</span></span>
-            <button class="sort-btn" data-status="in-progress" onclick="sortTasks('in-progress')">📅 По дате</button>
+            <button class="sort-btn" data-status="in-progress" onclick="sortTasks('in-progress')">📅↑↓</button>
           </div>
           <div class="task-list" id="in-progress-tasks"></div>
         </div>
         <div class="column done" data-status="done">
           <div class="column-header">
             <span class="column-header-left">${statusLabels['done']}<span class="task-count" id="countDone">0</span></span>
-            <button class="sort-btn" data-status="done" onclick="sortTasks('done')">📅 По дате</button>
+            <button class="sort-btn" data-status="done" onclick="sortTasks('done')">📅↑↓</button>
           </div>
           <div class="task-list" id="done-tasks"></div>
         </div>
@@ -1463,9 +1463,9 @@
         const btnStatus = btn.dataset.status;
         if (sortState[btnStatus]) {
           btn.classList.add('active');
-          btn.textContent = sortState[btnStatus] === 'asc' ? '📅 ↑' : '📅 ↓';
+          btn.textContent = sortState[btnStatus] === 'asc' ? '📅↑' : '📅↓';
         } else {
-          btn.textContent = '📅 По дате';
+          btn.textContent = '📅↑↓';
         }
       });
       
