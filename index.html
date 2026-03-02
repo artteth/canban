@@ -1348,9 +1348,6 @@
     function renderBoard(loadedTasks) {
       tasks = loadedTasks;
       
-      // Update counters after tasks is set
-      updateTaskCounts();
-      
       const board = document.getElementById('board');
       board.innerHTML = `
         <div class="column todo" data-status="todo">
@@ -1442,6 +1439,9 @@
           btn.textContent = sortState[btnStatus] === 'asc' ? '📅 ↑' : '📅 ↓';
         }
       });
+      
+      // Update task counters after HTML is rendered
+      updateTaskCounts();
     }
 
     function sortTasks(status) {
