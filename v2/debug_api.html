@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🔧 Отладка API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    h1 { color: white; text-align: center; margin-bottom: 24px; }
+    h2 { font-size: 18px; margin-bottom: 16px; color: #333; }
+    .btn {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .btn-success { background: #4caf50; color: white; }
+    .btn-danger { background: #f44336; color: white; }
+    pre {
+      background: #f5f7fa;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 14px; color: #666; margin-bottom: 8px; }
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .log { font-family: monospace; font-size: 12px; }
+    .success { color: #2e7d32; }
+    .error { color: #c62828; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Отладка API Kanban v2</h1>
+  
+  <div class="container">
+    <!-- Настройка URL -->
+    <div class="card">
+      <h2>1️⃣ API URL</h2>
+      <div class="input-group">
+        <label>URL Google Apps Script:</label>
+        <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <button class="btn btn-primary" onclick="saveUrl()">💾 Сохранить</button>
+      <button class="btn btn-success" onclick="testGetUsers()">🧪 Тест getUsers()</button>
+      <button class="btn btn-success" onclick="testAddUser()">➕ Тест addUser()</button>
+    </div>
+
+    <!-- Результат -->
+    <div class="card">
+      <h2>📊 Результат</h2>
+      <pre id="result">Нажмите кнопку для теста...</pre>
+    </div>
+
+    <!-- Пользователи -->
+    <div class="card">
+      <h2>👥 Список пользователей</h2>
+      <button class="btn btn-primary" onclick="loadAllUsers()">🔄 Загрузить всех</button>
+      <button class="btn btn-danger" onclick="clearAllUsers()">🗑️ Удалить тестовых</button>
+      <div id="usersList" style="margin-top: 16px;"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL_KEY = 'kanban_v2_api_url';
+
+    function init() {
+      const saved = localStorage.getItem(API_URL_KEY);
+      if (saved) {
+        document.getElementById('apiUrl').value = saved;
+      }
+    }
+
+    function saveUrl() {
+      const url = document.getElementById('apiUrl').value.trim();
+      if (!url) { alert('Введите URL'); return; }
+      localStorage.setItem(API_URL_KEY, url);
+      log('URL сохранён: ' + url, 'success');
+    }
+
+    function log(message, type = 'info') {
+      const el = document.getElementById('result');
+      const time = new Date().toLocaleTimeString();
+      el.innerHTML += `\n<span class="${type}">[${time}] ${message}</span>`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('result').innerHTML = '';
+    }
+
+    function showResult(data) {
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function apiCall(action, params = {}) {
+      const url = localStorage.getItem(API_URL_KEY);
+      if (!url) throw new Error('API URL не настроен');
+
+      return new Promise((resolve, reject) => {
+        const callbackName = 'cb_' + Date.now();
+        let qs = `mode=jsonp&action=${action}&callback=${callbackName}`;
+        for (const k in params) {
+          if (params[k]) qs += `&${k}=${encodeURIComponent(params[k])}`;
+        }
+
+        const script = document.createElement('script');
+        script.src = `${url}?${qs}`;
+        script.onerror = () => {
+          reject(new Error('Ошибка сети'));
+          document.body.removeChild(script);
+        };
+
+        window[callbackName] = (resp) => {
+          console.log('API Response:', resp);
+          if (resp && resp.ok) {
+            resolve(resp.data);
+          } else if (resp && resp.ok === false) {
+            reject(new Error(resp.error || 'Ошибка API'));
+          } else if (Array.isArray(resp)) {
+            resolve(resp);
+          } else {
+            resolve(resp);
+          }
+          delete window[callbackName];
+          document.body.removeChild(script);
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    async function testGetUsers() {
+      try {
+        log('Вызов getUsers()...', 'info');
+        const users = await apiCall('getUsers');
+        log('✅ getUsers() вернул: ' + JSON.stringify(users), 'success');
+        showResult(users);
+        renderUsers(users);
+      } catch (e) {
+        log('❌ getUsers() ошибка: ' + e.message, 'error');
+        showResult({ error: e.message, stack: e.stack });
+      }
+    }
+
+    async function testAddUser() {
+      try {
+        const name = 'Тест_' + Date.now();
+        log('Вызов addUser("' + name + '")...', 'info');
+        
+        const result = await apiCall('addUser', {
+          name: name,
+          telegramId: '@test',
+          role: 'user'
+        });
+        
+        log('✅ addUser() вернул: ' + JSON.stringify(result), 'success');
+        showResult(result);
+        
+        // Сразу загружаем всех
+        await loadAllUsers();
+      } catch (e) {
+        log('❌ addUser() ошибка: ' + e.message, 'error');
+        showResult({ error: e.message, stack: e.stack });
+      }
+    }
+
+    async function loadAllUsers() {
+      try {
+        log('Загрузка всех пользователей...', 'info');
+        const users = await apiCall('getUsers');
+        renderUsers(users);
+        log('✅ Загружено пользователей: ' + users.length, 'success');
+      } catch (e) {
+        log('❌ Ошибка: ' + e.message, 'error');
+      }
+    }
+
+    async function clearAllUsers() {
+      if (!confirm('Удалить всех тестовых пользователей (Тест_*)?')) return;
+      
+      try {
+        const users = await apiCall('getUsers');
+        const testUsers = users.filter(u => u.name.startsWith('Тест_'));
+        
+        log('Найдено тестовых: ' + testUsers.length, 'info');
+        
+        for (const u of testUsers) {
+          await apiCall('deleteUser', { userId: u.userId });
+          log('Удалён: ' + u.name, 'success');
+        }
+        
+        await loadAllUsers();
+      } catch (e) {
+        log('❌ Ошибка: ' + e.message, 'error');
+      }
+    }
+
+    function renderUsers(users) {
+      const div = document.getElementById('usersList');
+      if (!users || users.length === 0) {
+        div.innerHTML = '<p>Пользователей нет</p>';
+        return;
+      }
+      
+      let html = '<div style="display: grid; gap: 8px;">';
+      users.forEach(u => {
+        html += `
+          <div style="background: #f5f7fa; padding: 12px; border-radius: 8px;">
+            <strong>${escapeHtml(u.name)}</strong> 
+            ${u.role === 'admin' ? '👑' : '👤'}
+            <br>
+            <code style="font-size: 11px; color: #666;">${u.userId}</code>
+            ${u.telegramId ? '<br>Telegram: ' + escapeHtml(u.telegramId) : ''}
+          </div>
+        `;
+      });
+      html += '</div>';
+      div.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    init();
+  </script>
+</body>
+</html>

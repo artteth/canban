@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#667eea" />
+  <title>Kanban - Админская панель</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .header-left h1 {
+      font-size: 24px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f5f7fa;
+      color: #666;
+    }
+
+    .btn-secondary:hover {
+      background: #e1e5eb;
+    }
+
+    .btn-danger {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-danger:hover {
+      background: #c62828;
+      color: white;
+    }
+
+    .btn-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .btn-success:hover {
+      background: #2e7d32;
+      color: white;
+    }
+
+    /* Filters */
+    .filters {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .filters-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: #333;
+    }
+
+    .filter-group select:focus,
+    .filter-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* Tasks Table */
+    .tasks-section {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-header h2 {
+      font-size: 18px;
+      color: #333;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e1e5eb;
+    }
+
+    th {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #f5f7fa;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .task-title {
+      font-weight: 500;
+      color: #333;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-todo {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-in-progress {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-done {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .assignee-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #f5f7fa;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .task-actions button {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit-task {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .btn-edit-task:hover {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-delete-task {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-delete-task:hover {
+      background: #c62828;
+      color: white;
+    }
+
+    /* Users Section */
+    .users-section {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+      background: #f5f7fa;
+      color: #666;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e1e5eb;
+    }
+
+    .modal-btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .modal-btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Date badge */
+    .date-badge {
+      font-size: 12px;
+      color: #666;
+      padding: 4px 8px;
+      background: #f5f7fa;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .date-badge.overdue {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .date-badge.today {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-right {
+        justify-content: stretch;
+      }
+
+      .header-right .btn {
+        justify-content: center;
+      }
+
+      .filters-row {
+        flex-direction: column;
+      }
+
+      .filter-group {
+        min-width: 100%;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 8px 12px;
+      }
+
+      .task-title {
+        max-width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>🔧 Админская панель</h1>
+      </div>
+      <div class="header-right">
+        <a href="select_user.html" class="btn btn-secondary">👤 Выбор пользователя</a>
+        <a href="index_v2.html" class="btn btn-secondary">📋 Kanban доска</a>
+        <button class="btn btn-primary" onclick="openAddTaskModal()">➕ Добавить задачу</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label for="filterUser">👤 Пользователь:</label>
+          <select id="filterUser" onchange="applyFilters()">
+            <option value="">Все пользователи</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterStatus">📊 Статус:</label>
+          <select id="filterStatus" onchange="applyFilters()">
+            <option value="">Все статусы</option>
+            <option value="todo">К выполнению</option>
+            <option value="in-progress">В работе</option>
+            <option value="done">Готово</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filterSearch">🔍 Поиск:</label>
+          <input type="text" id="filterSearch" placeholder="Поиск по названию..." oninput="applyFilters()" />
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" onclick="resetFilters()">Сбросить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="statsContainer">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Всего задач</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTodo">0</div>
+        <div class="stat-label">К выполнению</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statInProgress">0</div>
+        <div class="stat-label">В работе</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statDone">0</div>
+        <div class="stat-label">Готово</div>
+      </div>
+    </div>
+
+    <!-- Tasks Table -->
+    <div class="tasks-section">
+      <div class="section-header">
+        <h2>📋 Все задачи</h2>
+        <button class="btn btn-primary" onclick="openAddTaskModal()">➕ Добавить задачу</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Статус</th>
+              <th>Исполнитель</th>
+              <th>Плановая дата</th>
+              <th>Дата создания</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="tasksTableBody">
+            <tr>
+              <td colspan="6" class="loading">
+                <div class="spinner"></div>
+                Загрузка задач...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users Section -->
+    <div class="users-section">
+      <div class="section-header">
+        <h2>👤 Пользователи</h2>
+        <button class="btn btn-primary" onclick="openAddUserModal()">➕ Добавить пользователя</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Имя</th>
+              <th>Telegram</th>
+              <th>Роль</th>
+              <th>Задач</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="5" class="loading">
+                <div class="spinner"></div>
+                Загрузка пользователей...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Task Modal -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal-content">
+      <div class="modal-title" id="taskModalTitle">Новая задача</div>
+      
+      <div class="form-group">
+        <label for="taskTitle">Название задачи *</label>
+        <textarea id="taskTitle" placeholder="Введите описание задачи..."></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label for="taskAssignee">👤 Исполнитель *</label>
+        <select id="taskAssignee">
+          <option value="">Выберите исполнителя...</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="taskStatus">📊 Статус</label>
+        <select id="taskStatus">
+          <option value="todo">К выполнению</option>
+          <option value="in-progress">В работе</option>
+          <option value="done">Готово</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="taskPlannedDate">📅 Плановая дата</label>
+        <input type="date" id="taskPlannedDate" />
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeTaskModal()">Отмена</button>
+        <button class="modal-btn modal-btn-save" onclick="saveTask()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-content">
+      <div class="modal-title" id="userModalTitle">Новый пользователь</div>
+      
+      <div class="form-group">
+        <label for="userName">Имя *</label>
+        <input type="text" id="userName" placeholder="Введите имя" />
+      </div>
+      
+      <div class="form-group">
+        <label for="userTelegram">Telegram</label>
+        <input type="text" id="userTelegram" placeholder="@username" />
+      </div>
+      
+      <div class="form-group">
+        <label for="userRole">Роль</label>
+        <select id="userRole">
+          <option value="user">Пользователь</option>
+          <option value="admin">Админ</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUserModal()">Отмена</button>
+        <button class="modal-btn modal-btn-save" onclick="saveUser()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Configuration =====
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwOmfbiY6qcoZtJJFyazXATEQKiVakQoFvRtVBwJbtGIFQUlhxFSiXlL89mI2_cxEg0/exec';
+
+    // ===== State =====
+    let tasks = [];
+    let users = [];
+    let filteredTasks = [];
+    let editingTaskId = null;
+    let editingUserId = null;
+
+    // ===== API Functions =====
+    function apiJsonp(action, params = {}) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now();
+        let urlParams = `mode=jsonp&action=${encodeURIComponent(action)}&callback=${callbackName}`;
+        for (const key in params) {
+          if (params[key]) {
+            urlParams += `&${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+          }
+        }
+        const url = `${API_URL}?${urlParams}`;
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => reject(new Error('JSONP request failed'));
+
+        window[callbackName] = (response) => {
+          if (response && response.ok) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response?.error || 'API error'));
+          }
+          delete window[callbackName];
+          document.body.removeChild(script);
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    // ===== Load Data =====
+    async function loadData() {
+      try {
+        const [tasksData, usersData] = await Promise.all([
+          apiJsonp('getTasks', { userId: 'admin' }),
+          apiJsonp('getUsers')
+        ]);
+        
+        tasks = tasksData;
+        users = usersData;
+        
+        populateUserFilter();
+        populateUserDropdown();
+        renderTasksTable();
+        renderUsersTable();
+        updateStats();
+      } catch (e) {
+        console.error('Failed to load data:', e);
+        document.getElementById('tasksTableBody').innerHTML = 
+          '<tr><td colspan="6" class="empty-state">Ошибка загрузки: ' + e.message + '</td></tr>';
+      }
+    }
+
+    // ===== User Filter =====
+    function populateUserFilter() {
+      const select = document.getElementById('filterUser');
+      select.innerHTML = '<option value="">Все пользователи</option>';
+      
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.userId;
+        option.textContent = user.name + (user.role === 'admin' ? ' (Админ)' : '');
+        select.appendChild(option);
+      });
+    }
+
+    function populateUserDropdown() {
+      const select = document.getElementById('taskAssignee');
+      select.innerHTML = '<option value="">Выберите исполнителя...</option>';
+      
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user.userId;
+        option.textContent = user.name + (user.role === 'admin' ? ' 👑' : '');
+        select.appendChild(option);
+      });
+    }
+
+    // ===== Filters =====
+    function applyFilters() {
+      const userId = document.getElementById('filterUser').value;
+      const status = document.getElementById('filterStatus').value;
+      const search = document.getElementById('filterSearch').value.toLowerCase();
+
+      filteredTasks = tasks.filter(task => {
+        if (userId && task.assignedTo !== userId) return false;
+        if (status && task.status !== status) return false;
+        if (search && !task.title.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      renderTasksTable();
+      updateStats();
+    }
+
+    function resetFilters() {
+      document.getElementById('filterUser').value = '';
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterSearch').value = '';
+      applyFilters();
+    }
+
+    // ===== Stats =====
+    function updateStats() {
+      const data = filteredTasks.length ? filteredTasks : tasks;
+      
+      document.getElementById('statTotal').textContent = data.length;
+      document.getElementById('statTodo').textContent = data.filter(t => t.status === 'todo').length;
+      document.getElementById('statInProgress').textContent = data.filter(t => t.status === 'in-progress').length;
+      document.getElementById('statDone').textContent = data.filter(t => t.status === 'done').length;
+    }
+
+    // ===== Tasks Table =====
+    function renderTasksTable() {
+      const tbody = document.getElementById('tasksTableBody');
+      const data = filteredTasks.length ? filteredTasks : tasks;
+
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <p>Задач пока нет</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      data.forEach(task => {
+        const assignee = users.find(u => u.userId === task.assignedTo);
+        const statusLabels = {
+          'todo': { text: 'К выполнению', class: 'status-todo' },
+          'in-progress': { text: 'В работе', class: 'status-in-progress' },
+          'done': { text: 'Готово', class: 'status-done' }
+        };
+
+        const status = statusLabels[task.status] || { text: task.status, class: '' };
+        
+        let plannedDateClass = 'date-badge';
+        if (task.plannedDate) {
+          const today = getTodayStr();
+          if (task.plannedDate < today && task.status !== 'done') {
+            plannedDateClass += ' overdue';
+          } else if (task.plannedDate === today) {
+            plannedDateClass += ' today';
+          }
+        }
+
+        html += `
+          <tr>
+            <td>
+              <div class="task-title" title="${escapeHtml(task.title)}">${escapeHtml(task.title)}</div>
+            </td>
+            <td>
+              <span class="status-badge ${status.class}">${status.text}</span>
+            </td>
+            <td>
+              ${assignee ? `<span class="assignee-badge">👤 ${escapeHtml(assignee.name)}</span>` : '<span class="date-badge">Не назначен</span>'}
+            </td>
+            <td>
+              ${task.plannedDate ? `<span class="${plannedDateClass}">${formatDate(task.plannedDate)}</span>` : '<span class="date-badge">—</span>'}
+            </td>
+            <td>
+              ${task.startDate ? formatDate(task.startDate) : '—'}
+            </td>
+            <td>
+              <div class="task-actions">
+                <button class="btn-edit-task" onclick="openEditTaskModal('${task.id}')" title="Редактировать">✏️</button>
+                <button class="btn-delete-task" onclick="deleteTask('${task.id}')" title="Удалить">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // ===== Users Table =====
+    function renderUsersTable() {
+      const tbody = document.getElementById('usersTableBody');
+
+      if (users.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <div class="empty-state-icon">👤</div>
+              <p>Пользователей пока нет</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      users.forEach(user => {
+        const taskCount = tasks.filter(t => t.assignedTo === user.userId).length;
+        const roleLabel = user.role === 'admin' ? '👑 Админ' : '👤 Пользователь';
+
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(user.name)}</strong></td>
+            <td>${user.telegramId ? escapeHtml(user.telegramId) : '—'}</td>
+            <td>${roleLabel}</td>
+            <td>${taskCount}</td>
+            <td>
+              <div class="task-actions">
+                <button class="btn-edit-task" onclick="openEditUserModal('${user.userId}')" title="Редактировать">✏️</button>
+                ${users.filter(u => u.role === 'admin').length > 1 || user.role !== 'admin' ? 
+                  `<button class="btn-delete-task" onclick="deleteUser('${user.userId}')" title="Удалить">🗑️</button>` : 
+                  ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // ===== Task Modal Functions =====
+    function openAddTaskModal() {
+      editingTaskId = null;
+      document.getElementById('taskModalTitle').textContent = 'Новая задача';
+      document.getElementById('taskTitle').value = '';
+      document.getElementById('taskAssignee').value = '';
+      document.getElementById('taskStatus').value = 'todo';
+      document.getElementById('taskPlannedDate').value = '';
+      document.getElementById('taskModal').classList.add('show');
+      setTimeout(() => document.getElementById('taskTitle').focus(), 100);
+    }
+
+    function openEditTaskModal(taskId) {
+      editingTaskId = taskId;
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      document.getElementById('taskModalTitle').textContent = 'Редактирование задачи';
+      document.getElementById('taskTitle').value = task.title || '';
+      document.getElementById('taskAssignee').value = task.assignedTo || '';
+      document.getElementById('taskStatus').value = task.status || 'todo';
+      document.getElementById('taskPlannedDate').value = task.plannedDate || '';
+      document.getElementById('taskModal').classList.add('show');
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.remove('show');
+      editingTaskId = null;
+    }
+
+    async function saveTask() {
+      const title = document.getElementById('taskTitle').value.trim();
+      const assignedTo = document.getElementById('taskAssignee').value;
+      const status = document.getElementById('taskStatus').value;
+      const plannedDate = document.getElementById('taskPlannedDate').value;
+
+      if (!title) {
+        alert('Введите название задачи');
+        return;
+      }
+
+      if (!assignedTo) {
+        alert('Выберите исполнителя');
+        return;
+      }
+
+      try {
+        if (editingTaskId) {
+          await apiJsonp('updateTask', {
+            id: editingTaskId,
+            title,
+            assignedTo,
+            status,
+            plannedDate
+          });
+        } else {
+          await apiJsonp('addTask', {
+            title,
+            assignedTo,
+            plannedDate
+          });
+        }
+
+        closeTaskModal();
+        await loadData();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    async function deleteTask(taskId) {
+      if (!confirm('Вы уверены, что хотите удалить эту задачу?')) return;
+
+      try {
+        await apiJsonp('deleteTask', { id: taskId });
+        await loadData();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    // ===== User Modal Functions =====
+    function openAddUserModal() {
+      editingUserId = null;
+      document.getElementById('userModalTitle').textContent = 'Новый пользователь';
+      document.getElementById('userName').value = '';
+      document.getElementById('userTelegram').value = '';
+      document.getElementById('userRole').value = 'user';
+      document.getElementById('userModal').classList.add('show');
+      setTimeout(() => document.getElementById('userName').focus(), 100);
+    }
+
+    function openEditUserModal(userId) {
+      editingUserId = userId;
+      const user = users.find(u => u.userId === userId);
+      if (!user) return;
+
+      document.getElementById('userModalTitle').textContent = 'Редактирование пользователя';
+      document.getElementById('userName').value = user.name || '';
+      document.getElementById('userTelegram').value = user.telegramId || '';
+      document.getElementById('userRole').value = user.role || 'user';
+      document.getElementById('userModal').classList.add('show');
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('show');
+      editingUserId = null;
+    }
+
+    async function saveUser() {
+      const name = document.getElementById('userName').value.trim();
+      const telegramId = document.getElementById('userTelegram').value.trim();
+      const role = document.getElementById('userRole').value;
+
+      if (!name) {
+        alert('Введите имя');
+        return;
+      }
+
+      try {
+        if (editingUserId) {
+          await apiJsonp('updateUser', {
+            userId: editingUserId,
+            name,
+            telegramId,
+            role
+          });
+        } else {
+          await apiJsonp('addUser', {
+            name,
+            telegramId,
+            role
+          });
+        }
+
+        closeUserModal();
+        await loadData();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+
+      try {
+        await apiJsonp('deleteUser', { userId });
+        await loadData();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    // ===== Utilities =====
+    function getTodayStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      const date = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ===== Event Listeners =====
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const taskModal = document.getElementById('taskModal');
+        const userModal = document.getElementById('userModal');
+        if (taskModal.classList.contains('show')) closeTaskModal();
+        if (userModal.classList.contains('show')) closeUserModal();
+      }
+    });
+
+    document.getElementById('taskModal').addEventListener('click', function(e) {
+      if (e.target === this) closeTaskModal();
+    });
+
+    document.getElementById('userModal').addEventListener('click', function(e) {
+      if (e.target === this) closeUserModal();
+    });
+
+    // ===== Initialization =====
+    loadData();
+  </script>
+</body>
+</html>

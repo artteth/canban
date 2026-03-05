@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#667eea" />
+  <title>Kanban - Выбор пользователя</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .user-card {
+      background: #f5f7fa;
+      border: 2px solid #e1e5eb;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-card:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+      transform: translateY(-2px);
+    }
+
+    .user-card.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .user-card.selected .user-avatar {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .user-card.selected .user-name {
+      color: white;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .user-card.selected .user-role {
+      color: rgba(255,255,255,0.8);
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .user-card:hover .user-actions {
+      opacity: 1;
+    }
+
+    .user-card.selected .user-actions {
+      opacity: 1;
+    }
+
+    .user-action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .btn-edit:hover {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-delete:hover {
+      background: #c62828;
+      color: white;
+    }
+
+    .user-card.selected .btn-edit,
+    .user-card.selected .btn-delete {
+      background: rgba(255,255,255,0.3);
+      color: white;
+    }
+
+    .add-user-btn {
+      width: 100%;
+      padding: 16px;
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .add-user-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .continue-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .continue-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .admin-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .admin-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .admin-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+      background: #f5f7fa;
+      color: #666;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e1e5eb;
+    }
+
+    .modal-btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .modal-btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Kanban Board</h1>
+      <p>Выберите пользователя для продолжения</p>
+    </div>
+
+    <div id="userListContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        Загрузка пользователей...
+      </div>
+    </div>
+
+    <button class="add-user-btn" onclick="openAddUserModal()">
+      <span>➕</span> Добавить пользователя
+    </button>
+
+    <button class="continue-btn" id="continueBtn" onclick="continueToBoard()">
+      Продолжить →
+    </button>
+
+    <div class="admin-link">
+      <a href="?mode=admin" onclick="event.preventDefault(); goToAdmin();">🔧 Админская панель</a>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">Новый пользователь</div>
+      
+      <div class="form-group">
+        <label for="userName">Имя *</label>
+        <input type="text" id="userName" placeholder="Введите имя" />
+      </div>
+      
+      <div class="form-group">
+        <label for="userTelegram">Telegram (необязательно)</label>
+        <input type="text" id="userTelegram" placeholder="@username" />
+      </div>
+      
+      <div class="form-group" id="roleGroup" style="display: none;">
+        <label for="userRole">Роль</label>
+        <select id="userRole">
+          <option value="user">Пользователь</option>
+          <option value="admin">Админ</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUserModal()">Отмена</button>
+        <button class="modal-btn modal-btn-save" onclick="saveUser()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Configuration =====
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwOmfbiY6qcoZtJJFyazXATEQKiVakQoFvRtVBwJbtGIFQUlhxFSiXlL89mI2_cxEg0/exec';
+    const CURRENT_USER_KEY = 'kanban_current_user_v2';
+
+    // ===== State =====
+    let users = [];
+    let selectedUserId = null;
+    let editingUserId = null;
+
+    // ===== API Functions =====
+    function apiJsonp(action, params = {}) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now();
+        let urlParams = `mode=jsonp&action=${encodeURIComponent(action)}&callback=${callbackName}`;
+        for (const key in params) {
+          if (params[key]) {
+            urlParams += `&${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+          }
+        }
+        const url = `${API_URL}?${urlParams}`;
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => reject(new Error('JSONP request failed'));
+
+        window[callbackName] = (response) => {
+          console.log(`API ${action} response:`, response);
+          
+          // Обрабатываем разные форматы ответа
+          if (!response) {
+            reject(new Error('Пустой ответ от сервера'));
+          } else if (response.ok && response.data !== undefined) {
+            // Формат: {ok: true, data: [...]}
+            resolve(response.data);
+          } else if (Array.isArray(response)) {
+            // Формат: [...] (для обратной совместимости)
+            resolve(response);
+          } else if (response.ok === false) {
+            reject(new Error(response.error || 'Ошибка API'));
+          } else {
+            // Пытаемся извлечь данные
+            resolve(response.data || response);
+          }
+          
+          delete window[callbackName];
+          document.body.removeChild(script);
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    // ===== User Management =====
+    async function loadUsers() {
+      try {
+        const result = await apiJsonp('getUsers');
+        console.log('getUsers result:', result);
+        
+        // Защита: результат должен быть массивом
+        if (Array.isArray(result)) {
+          users = result;
+        } else if (result && Array.isArray(result.data)) {
+          users = result.data;
+        } else if (result && result.ok && Array.isArray(result.data)) {
+          users = result.data;
+        } else {
+          console.error('Unexpected result format:', result);
+          users = [];
+        }
+        
+        renderUserList();
+      } catch (e) {
+        console.error('loadUsers error:', e);
+        document.getElementById('userListContainer').innerHTML =
+          '<div class="loading">Ошибка: ' + e.message + '</div>';
+      }
+    }
+
+    function renderUserList() {
+      const container = document.getElementById('userListContainer');
+      
+      // Защита: users должен быть массивом
+      if (!Array.isArray(users)) {
+        console.error('users is not an array:', users);
+        container.innerHTML = `
+          <div class="loading">
+            <p>⚠️ Ошибка формата данных</p>
+            <p style="margin-top: 8px; font-size: 13px; color: #888;">
+              Проверьте консоль браузера (F12) для деталей
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      if (users.length === 0) {
+        container.innerHTML = `
+          <div class="loading">
+            <p>Пользователей пока нет</p>
+            <p style="margin-top: 8px; font-size: 13px; color: #888;">
+              Нажмите "Добавить пользователя" чтобы создать первого
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="user-list">';
+      
+      users.forEach(user => {
+        const avatarLetter = user.name.charAt(0).toUpperCase();
+        const roleLabel = user.role === 'admin' ? '👑 Админ' : '👤 Пользователь';
+        const isSelected = user.userId === selectedUserId ? 'selected' : '';
+        
+        html += `
+          <div class="user-card ${isSelected}" onclick="selectUser('${user.userId}')">
+            <div class="user-avatar">${avatarLetter}</div>
+            <div class="user-info">
+              <div class="user-name">${escapeHtml(user.name)}</div>
+              <div class="user-role">${roleLabel}${user.telegramId ? ' • ' + escapeHtml(user.telegramId) : ''}</div>
+            </div>
+            <div class="user-actions">
+              <button class="user-action-btn btn-edit" onclick="event.stopPropagation(); openEditUserModal('${user.userId}')" title="Редактировать">✏️</button>
+              ${user.role !== 'admin' || users.filter(u => u.role === 'admin').length > 1 ? 
+                `<button class="user-action-btn btn-delete" onclick="event.stopPropagation(); deleteUser('${user.userId}')" title="Удалить">🗑️</button>` : 
+                ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function selectUser(userId) {
+      selectedUserId = userId;
+      renderUserList();
+      
+      const continueBtn = document.getElementById('continueBtn');
+      continueBtn.classList.add('active');
+    }
+
+    function continueToBoard() {
+      if (!selectedUserId) return;
+      
+      localStorage.setItem(CURRENT_USER_KEY, selectedUserId);
+      
+      const user = users.find(u => u.userId === selectedUserId);
+      if (user && user.role === 'admin') {
+        window.location.href = '?mode=admin';
+      } else {
+        window.location.href = 'index_v2.html?userId=' + selectedUserId;
+      }
+    }
+
+    function goToAdmin() {
+      window.location.href = 'admin.html';
+    }
+
+    // ===== Modal Functions =====
+    function openAddUserModal() {
+      editingUserId = null;
+      document.getElementById('modalTitle').textContent = 'Новый пользователь';
+      document.getElementById('userName').value = '';
+      document.getElementById('userTelegram').value = '';
+      document.getElementById('userRole').value = 'user';
+      document.getElementById('roleGroup').style.display = 'block';
+      document.getElementById('userModal').classList.add('show');
+      setTimeout(() => document.getElementById('userName').focus(), 100);
+    }
+
+    function openEditUserModal(userId) {
+      editingUserId = userId;
+      const user = users.find(u => u.userId === userId);
+      if (!user) return;
+      
+      document.getElementById('modalTitle').textContent = 'Редактирование';
+      document.getElementById('userName').value = user.name || '';
+      document.getElementById('userTelegram').value = user.telegramId || '';
+      document.getElementById('userRole').value = user.role || 'user';
+      document.getElementById('roleGroup').style.display = 'block';
+      document.getElementById('userModal').classList.add('show');
+      setTimeout(() => document.getElementById('userName').focus(), 100);
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('show');
+      editingUserId = null;
+    }
+
+    async function saveUser() {
+      const name = document.getElementById('userName').value.trim();
+      const telegramId = document.getElementById('userTelegram').value.trim();
+      const role = document.getElementById('userRole').value;
+
+      if (!name) {
+        alert('Введите имя');
+        return;
+      }
+
+      // Проверка API URL
+      const apiUrl = localStorage.getItem(API_URL_KEY);
+      if (!apiUrl) {
+        alert('❌ API URL не настроен!\\n\\n1. Откройте test_setup.html\\n2. Введите URL Google Apps Script\\n3. Сохраните URL\\n4. Вернитесь на эту страницу');
+        window.location.href = 'test_setup.html';
+        return;
+      }
+
+      try {
+        console.log('Saving user:', { name, telegramId, role });
+        
+        if (editingUserId) {
+          const result = await apiJsonp('updateUser', {
+            userId: editingUserId,
+            name,
+            telegramId,
+            role
+          });
+          console.log('Update result:', result);
+        } else {
+          const result = await apiJsonp('addUser', {
+            name,
+            telegramId,
+            role
+          });
+          console.log('Add user result:', result);
+        }
+
+        closeUserModal();
+        
+        console.log('Reloading users...');
+        await loadUsers();
+        console.log('Users loaded:', users);
+
+        if (editingUserId && selectedUserId === editingUserId) {
+          const updatedUser = users.find(u => u.userId === editingUserId);
+          if (updatedUser) selectedUserId = updatedUser.userId;
+        }
+        
+        // Показываем успешное сообщение
+        if (!editingUserId) {
+          alert('✅ Пользователь "' + name + '" успешно добавлен!');
+        }
+      } catch (e) {
+        console.error('saveUser error:', e);
+        alert('❌ Ошибка сохранения: ' + e.message + '\\n\\nПроверьте консоль браузера (F12) для деталей.');
+      }
+    }
+
+    async function deleteUser(userId) {
+      if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+      
+      try {
+        await apiJsonp('deleteUser', { userId });
+        
+        if (selectedUserId === userId) {
+          selectedUserId = null;
+          document.getElementById('continueBtn').classList.remove('active');
+        }
+        
+        await loadUsers();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    // ===== Utilities =====
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ===== Event Listeners =====
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('userModal');
+        if (modal.classList.contains('show')) {
+          closeUserModal();
+        }
+      }
+    });
+
+    document.getElementById('userModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeUserModal();
+      }
+    });
+
+    // ===== Initialization =====
+    loadUsers();
+  </script>
+</body>
+</html>
