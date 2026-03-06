@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#667eea" />
+  <title>Kanban v2 - Локальный тест</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .user-card {
+      background: #f5f7fa;
+      border: 2px solid #e1e5eb;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-card:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+      transform: translateY(-2px);
+    }
+
+    .user-card.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .user-card.selected .user-avatar {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .user-card.selected .user-name {
+      color: white;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .user-card.selected .user-role {
+      color: rgba(255,255,255,0.8);
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .user-card:hover .user-actions {
+      opacity: 1;
+    }
+
+    .user-card.selected .user-actions {
+      opacity: 1;
+    }
+
+    .user-action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .btn-edit:hover {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-delete:hover {
+      background: #c62828;
+      color: white;
+    }
+
+    .user-card.selected .btn-edit,
+    .user-card.selected .btn-delete {
+      background: rgba(255,255,255,0.3);
+      color: white;
+    }
+
+    .add-user-btn {
+      width: 100%;
+      padding: 16px;
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .add-user-btn:hover {
+      border-color: #667eea;
+      color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .continue-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .continue-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .admin-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .admin-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .admin-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5eb;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+      background: #f5f7fa;
+      color: #666;
+    }
+
+    .modal-btn-cancel:hover {
+      background: #e1e5eb;
+    }
+
+    .modal-btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .modal-btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Kanban Board v2</h1>
+      <p>Выберите пользователя для продолжения</p>
+      <span class="badge">🏠 Локальный режим</span>
+    </div>
+
+    <div id="userListContainer">
+      <div class="loading">Загрузка...</div>
+    </div>
+
+    <button class="add-user-btn" onclick="openAddUserModal()">
+      <span>➕</span> Добавить пользователя
+    </button>
+
+    <button class="continue-btn" id="continueBtn" onclick="continueToBoard()">
+      Продолжить →
+    </button>
+
+    <div class="admin-link">
+      <a href="admin_local.html">🔧 Админская панель</a>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">Новый пользователь</div>
+      
+      <div class="form-group">
+        <label for="userName">Имя *</label>
+        <input type="text" id="userName" placeholder="Введите имя" />
+      </div>
+      
+      <div class="form-group">
+        <label for="userTelegram">Telegram (необязательно)</label>
+        <input type="text" id="userTelegram" placeholder="@username" />
+      </div>
+      
+      <div class="form-group">
+        <label for="userRole">Роль</label>
+        <select id="userRole">
+          <option value="user">Пользователь</option>
+          <option value="admin">Админ</option>
+        </select>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeUserModal()">Отмена</button>
+        <button class="modal-btn modal-btn-save" onclick="saveUser()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== LOCAL STORAGE API =====
+    const USERS_KEY = 'kanban_v2_users_local';
+    const TASKS_KEY = 'kanban_v2_tasks_local';
+    const CURRENT_USER_KEY = 'kanban_current_user_v2_local';
+
+    // ===== Mock Data =====
+    const DEFAULT_USERS = [
+      { userId: 'user_1', name: 'Артём', telegramId: '@artem', role: 'admin' },
+      { userId: 'user_2', name: 'Игорь', telegramId: '@igor', role: 'user' },
+      { userId: 'user_3', name: 'Мария', telegramId: '@maria', role: 'user' }
+    ];
+
+    const DEFAULT_TASKS = [
+      {
+        id: 'task_1',
+        title: 'Купить молоко и хлеб',
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: getTodayStr(),
+        assignedTo: 'user_2'
+      },
+      {
+        id: 'task_2',
+        title: 'Подготовить отчёт за квартал',
+        status: 'in-progress',
+        startDate: getDateOffsetStr(-2),
+        endDate: '',
+        duration: '',
+        plannedDate: getDateOffsetStr(2),
+        assignedTo: 'user_3'
+      },
+      {
+        id: 'task_3',
+        title: 'Позвонить клиенту Иванову',
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: getTodayStr(),
+        assignedTo: 'user_2'
+      },
+      {
+        id: 'task_4',
+        title: 'Исправить баги в модуле авторизации',
+        status: 'done',
+        startDate: getDateOffsetStr(-5),
+        endDate: getDateOffsetStr(-2),
+        duration: '3 дн.',
+        plannedDate: getDateOffsetStr(-3),
+        assignedTo: 'user_1'
+      }
+    ];
+
+    // ===== Utilities =====
+    function getTodayStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getDateOffsetStr(daysOffset) {
+      const date = new Date();
+      date.setDate(date.getDate() + daysOffset);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function generateId() {
+      return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function generateUserId() {
+      return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ===== LocalStorage API =====
+    function initStorage() {
+      if (!localStorage.getItem(USERS_KEY)) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS));
+      }
+      if (!localStorage.getItem(TASKS_KEY)) {
+        localStorage.setItem(TASKS_KEY, JSON.stringify(DEFAULT_TASKS));
+      }
+    }
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function getTasks(userId = null) {
+      const all = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
+      if (userId === 'admin') return all;
+      if (userId) return all.filter(t => t.assignedTo === userId);
+      return all;
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    }
+
+    function addUser(name, telegramId, role) {
+      const users = getUsers();
+      const user = {
+        userId: generateUserId(),
+        name,
+        telegramId: telegramId || '',
+        role: role || 'user'
+      };
+      users.push(user);
+      saveUsers(users);
+      return { ok: true, data: user };
+    }
+
+    function updateUser(userId, name, telegramId, role) {
+      const users = getUsers();
+      const idx = users.findIndex(u => u.userId === userId);
+      if (idx === -1) return { ok: false, error: 'Not found' };
+      
+      users[idx] = { ...users[idx], name, telegramId: telegramId || '', role: role || 'user' };
+      saveUsers(users);
+      return { ok: true, data: users[idx] };
+    }
+
+    function deleteUser(userId) {
+      const users = getUsers();
+      const filtered = users.filter(u => u.userId !== userId);
+      saveUsers(filtered);
+      return { ok: true };
+    }
+
+    function addTask(title, plannedDate, assignedTo) {
+      const tasks = getTasks();
+      const task = {
+        id: generateId(),
+        title,
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: plannedDate || '',
+        assignedTo
+      };
+      tasks.push(task);
+      saveTasks(tasks);
+      return { ok: true, data: getTasks('admin') };
+    }
+
+    function updateTask(taskId, updates) {
+      const tasks = getTasks();
+      const idx = tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return { ok: false, error: 'Not found' };
+      
+      tasks[idx] = { ...tasks[idx], ...updates };
+      saveTasks(tasks);
+      return { ok: true, data: getTasks('admin') };
+    }
+
+    function deleteTask(taskId) {
+      const tasks = getTasks();
+      const filtered = tasks.filter(t => t.id !== taskId);
+      saveTasks(filtered);
+      return { ok: true };
+    }
+
+    // ===== State =====
+    let users = [];
+    let selectedUserId = null;
+    let editingUserId = null;
+
+    // ===== Load & Render =====
+    function loadUsers() {
+      users = getUsers();
+      renderUserList();
+    }
+
+    function renderUserList() {
+      const container = document.getElementById('userListContainer');
+      
+      if (!Array.isArray(users)) {
+        users = [];
+      }
+
+      if (users.length === 0) {
+        container.innerHTML = `
+          <div class="loading">
+            <p>Пользователей пока нет</p>
+            <p style="margin-top: 8px; font-size: 13px; color: #888;">
+              Нажмите "Добавить пользователя" чтобы создать первого
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '<div class="user-list">';
+      
+      users.forEach(user => {
+        const avatarLetter = user.name.charAt(0).toUpperCase();
+        const roleLabel = user.role === 'admin' ? '👑 Админ' : '👤 Пользователь';
+        const isSelected = user.userId === selectedUserId ? 'selected' : '';
+        
+        html += `
+          <div class="user-card ${isSelected}" onclick="selectUser('${user.userId}')">
+            <div class="user-avatar">${avatarLetter}</div>
+            <div class="user-info">
+              <div class="user-name">${escapeHtml(user.name)}</div>
+              <div class="user-role">${roleLabel}${user.telegramId ? ' • ' + escapeHtml(user.telegramId) : ''}</div>
+            </div>
+            <div class="user-actions">
+              <button class="user-action-btn btn-edit" onclick="event.stopPropagation(); openEditUserModal('${user.userId}')" title="Редактировать">✏️</button>
+              ${user.role !== 'admin' || users.filter(u => u.role === 'admin').length > 1 ? 
+                `<button class="user-action-btn btn-delete" onclick="event.stopPropagation(); deleteUser('${user.userId}')" title="Удалить">🗑️</button>` : 
+                ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function selectUser(userId) {
+      selectedUserId = userId;
+      renderUserList();
+      
+      const continueBtn = document.getElementById('continueBtn');
+      continueBtn.classList.add('active');
+    }
+
+    function continueToBoard() {
+      if (!selectedUserId) return;
+      
+      localStorage.setItem(CURRENT_USER_KEY, selectedUserId);
+      
+      const user = users.find(u => u.userId === selectedUserId);
+      if (user && user.role === 'admin') {
+        window.location.href = 'admin_local.html';
+      } else {
+        window.location.href = 'index_local.html?userId=' + selectedUserId;
+      }
+    }
+
+    // ===== Modal Functions =====
+    function openAddUserModal() {
+      editingUserId = null;
+      document.getElementById('modalTitle').textContent = 'Новый пользователь';
+      document.getElementById('userName').value = '';
+      document.getElementById('userTelegram').value = '';
+      document.getElementById('userRole').value = 'user';
+      document.getElementById('userModal').classList.add('show');
+      setTimeout(() => document.getElementById('userName').focus(), 100);
+    }
+
+    function openEditUserModal(userId) {
+      editingUserId = userId;
+      const user = users.find(u => u.userId === userId);
+      if (!user) return;
+      
+      document.getElementById('modalTitle').textContent = 'Редактирование';
+      document.getElementById('userName').value = user.name || '';
+      document.getElementById('userTelegram').value = user.telegramId || '';
+      document.getElementById('userRole').value = user.role || 'user';
+      document.getElementById('userModal').classList.add('show');
+      setTimeout(() => document.getElementById('userName').focus(), 100);
+    }
+
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('show');
+      editingUserId = null;
+    }
+
+    function saveUser() {
+      const name = document.getElementById('userName').value.trim();
+      const telegramId = document.getElementById('userTelegram').value.trim();
+      const role = document.getElementById('userRole').value;
+      
+      if (!name) {
+        alert('Введите имя');
+        return;
+      }
+      
+      if (editingUserId) {
+        updateUser(editingUserId, name, telegramId, role);
+      } else {
+        addUser(name, telegramId, role);
+      }
+      
+      closeUserModal();
+      loadUsers();
+      
+      if (editingUserId && selectedUserId === editingUserId) {
+        const updatedUser = users.find(u => u.userId === editingUserId);
+        if (updatedUser) selectedUserId = updatedUser.userId;
+      }
+      
+      if (!editingUserId) {
+        alert('✅ Пользователь "' + name + '" успешно добавлен!');
+      }
+    }
+
+    function deleteUser(userId) {
+      if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
+      
+      deleteUser(userId);
+      
+      if (selectedUserId === userId) {
+        selectedUserId = null;
+        document.getElementById('continueBtn').classList.remove('active');
+      }
+      
+      loadUsers();
+    }
+
+    // ===== Event Listeners =====
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('userModal');
+        if (modal.classList.contains('show')) {
+          closeUserModal();
+        }
+      }
+    });
+
+    document.getElementById('userModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeUserModal();
+      }
+    });
+
+// ===== API Configuration =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbwOmfbiY6qcoZtJJFyazXATEQKiVakQoFvRtVBwJbtGIFQUlhxFSiXlL89mI2_cxEg0/exec';
+    // ===== Initialization =====
+    initStorage();
+    loadUsers();
+  </script>
+</body>
+</html>
