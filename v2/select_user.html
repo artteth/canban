@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#667eea" />
-  <title>Kanban - Выбор пользователя</title>
+  <title>Kanban v2 - Локальный тест</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -42,6 +41,17 @@
     .header p {
       color: #666;
       font-size: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 8px;
     }
 
     .user-list {
@@ -333,41 +343,18 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-
-    .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>📋 Kanban Board</h1>
+      <h1>📋 Kanban Board v2</h1>
       <p>Выберите пользователя для продолжения</p>
+      <span class="badge">🏠 Локальный режим</span>
     </div>
 
     <div id="userListContainer">
-      <div class="loading">
-        <div class="spinner"></div>
-        Загрузка пользователей...
-      </div>
+      <div class="loading">Загрузка...</div>
     </div>
 
     <button class="add-user-btn" onclick="openAddUserModal()">
@@ -379,7 +366,7 @@
     </button>
 
     <div class="admin-link">
-      <a href="?mode=admin" onclick="event.preventDefault(); goToAdmin();">🔧 Админская панель</a>
+      <a href="admin_local.html">🔧 Админская панель</a>
     </div>
   </div>
 
@@ -398,7 +385,7 @@
         <input type="text" id="userTelegram" placeholder="@username" />
       </div>
       
-      <div class="form-group" id="roleGroup" style="display: none;">
+      <div class="form-group">
         <label for="userRole">Роль</label>
         <select id="userRole">
           <option value="user">Пользователь</option>
@@ -414,99 +401,202 @@
   </div>
 
   <script>
-    // ===== Configuration =====
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwOmfbiY6qcoZtJJFyazXATEQKiVakQoFvRtVBwJbtGIFQUlhxFSiXlL89mI2_cxEg0/exec';
-    const CURRENT_USER_KEY = 'kanban_current_user_v2';
+    // ===== LOCAL STORAGE API =====
+    const USERS_KEY = 'kanban_v2_users_local';
+    const TASKS_KEY = 'kanban_v2_tasks_local';
+    const CURRENT_USER_KEY = 'kanban_current_user_v2_local';
+
+    // ===== Mock Data =====
+    const DEFAULT_USERS = [
+      { userId: 'user_1', name: 'Артём', telegramId: '@artem', role: 'admin' },
+      { userId: 'user_2', name: 'Игорь', telegramId: '@igor', role: 'user' },
+      { userId: 'user_3', name: 'Мария', telegramId: '@maria', role: 'user' }
+    ];
+
+    const DEFAULT_TASKS = [
+      {
+        id: 'task_1',
+        title: 'Купить молоко и хлеб',
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: getTodayStr(),
+        assignedTo: 'user_2'
+      },
+      {
+        id: 'task_2',
+        title: 'Подготовить отчёт за квартал',
+        status: 'in-progress',
+        startDate: getDateOffsetStr(-2),
+        endDate: '',
+        duration: '',
+        plannedDate: getDateOffsetStr(2),
+        assignedTo: 'user_3'
+      },
+      {
+        id: 'task_3',
+        title: 'Позвонить клиенту Иванову',
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: getTodayStr(),
+        assignedTo: 'user_2'
+      },
+      {
+        id: 'task_4',
+        title: 'Исправить баги в модуле авторизации',
+        status: 'done',
+        startDate: getDateOffsetStr(-5),
+        endDate: getDateOffsetStr(-2),
+        duration: '3 дн.',
+        plannedDate: getDateOffsetStr(-3),
+        assignedTo: 'user_1'
+      }
+    ];
+
+    // ===== Utilities =====
+    function getTodayStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getDateOffsetStr(daysOffset) {
+      const date = new Date();
+      date.setDate(date.getDate() + daysOffset);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function generateId() {
+      return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function generateUserId() {
+      return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ===== LocalStorage API =====
+    function initStorage() {
+      if (!localStorage.getItem(USERS_KEY)) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS));
+      }
+      if (!localStorage.getItem(TASKS_KEY)) {
+        localStorage.setItem(TASKS_KEY, JSON.stringify(DEFAULT_TASKS));
+      }
+    }
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function getTasks(userId = null) {
+      const all = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
+      if (userId === 'admin') return all;
+      if (userId) return all.filter(t => t.assignedTo === userId);
+      return all;
+    }
+
+    function saveTasks(tasks) {
+      localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+    }
+
+    function addUser(name, telegramId, role) {
+      const users = getUsers();
+      const user = {
+        userId: generateUserId(),
+        name,
+        telegramId: telegramId || '',
+        role: role || 'user'
+      };
+      users.push(user);
+      saveUsers(users);
+      return { ok: true, data: user };
+    }
+
+    function updateUser(userId, name, telegramId, role) {
+      const users = getUsers();
+      const idx = users.findIndex(u => u.userId === userId);
+      if (idx === -1) return { ok: false, error: 'Not found' };
+      
+      users[idx] = { ...users[idx], name, telegramId: telegramId || '', role: role || 'user' };
+      saveUsers(users);
+      return { ok: true, data: users[idx] };
+    }
+
+    function deleteUser(userId) {
+      const users = getUsers();
+      const filtered = users.filter(u => u.userId !== userId);
+      saveUsers(filtered);
+      return { ok: true };
+    }
+
+    function addTask(title, plannedDate, assignedTo) {
+      const tasks = getTasks();
+      const task = {
+        id: generateId(),
+        title,
+        status: 'todo',
+        startDate: getTodayStr(),
+        endDate: '',
+        duration: '',
+        plannedDate: plannedDate || '',
+        assignedTo
+      };
+      tasks.push(task);
+      saveTasks(tasks);
+      return { ok: true, data: getTasks('admin') };
+    }
+
+    function updateTask(taskId, updates) {
+      const tasks = getTasks();
+      const idx = tasks.findIndex(t => t.id === taskId);
+      if (idx === -1) return { ok: false, error: 'Not found' };
+      
+      tasks[idx] = { ...tasks[idx], ...updates };
+      saveTasks(tasks);
+      return { ok: true, data: getTasks('admin') };
+    }
+
+    function deleteTask(taskId) {
+      const tasks = getTasks();
+      const filtered = tasks.filter(t => t.id !== taskId);
+      saveTasks(filtered);
+      return { ok: true };
+    }
 
     // ===== State =====
     let users = [];
     let selectedUserId = null;
     let editingUserId = null;
 
-    // ===== API Functions =====
-    function apiJsonp(action, params = {}) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_callback_' + Date.now();
-        let urlParams = `mode=jsonp&action=${encodeURIComponent(action)}&callback=${callbackName}`;
-        for (const key in params) {
-          if (params[key]) {
-            urlParams += `&${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
-          }
-        }
-        const url = `${API_URL}?${urlParams}`;
-
-        const script = document.createElement('script');
-        script.src = url;
-        script.onerror = () => reject(new Error('JSONP request failed'));
-
-        window[callbackName] = (response) => {
-          console.log(`API ${action} response:`, response);
-          
-          // Обрабатываем разные форматы ответа
-          if (!response) {
-            reject(new Error('Пустой ответ от сервера'));
-          } else if (response.ok && response.data !== undefined) {
-            // Формат: {ok: true, data: [...]}
-            resolve(response.data);
-          } else if (Array.isArray(response)) {
-            // Формат: [...] (для обратной совместимости)
-            resolve(response);
-          } else if (response.ok === false) {
-            reject(new Error(response.error || 'Ошибка API'));
-          } else {
-            // Пытаемся извлечь данные
-            resolve(response.data || response);
-          }
-          
-          delete window[callbackName];
-          document.body.removeChild(script);
-        };
-
-        document.body.appendChild(script);
-      });
-    }
-
-    // ===== User Management =====
-    async function loadUsers() {
-      try {
-        const result = await apiJsonp('getUsers');
-        console.log('getUsers result:', result);
-        
-        // Защита: результат должен быть массивом
-        if (Array.isArray(result)) {
-          users = result;
-        } else if (result && Array.isArray(result.data)) {
-          users = result.data;
-        } else if (result && result.ok && Array.isArray(result.data)) {
-          users = result.data;
-        } else {
-          console.error('Unexpected result format:', result);
-          users = [];
-        }
-        
-        renderUserList();
-      } catch (e) {
-        console.error('loadUsers error:', e);
-        document.getElementById('userListContainer').innerHTML =
-          '<div class="loading">Ошибка: ' + e.message + '</div>';
-      }
+    // ===== Load & Render =====
+    function loadUsers() {
+      users = getUsers();
+      renderUserList();
     }
 
     function renderUserList() {
       const container = document.getElementById('userListContainer');
       
-      // Защита: users должен быть массивом
       if (!Array.isArray(users)) {
-        console.error('users is not an array:', users);
-        container.innerHTML = `
-          <div class="loading">
-            <p>⚠️ Ошибка формата данных</p>
-            <p style="margin-top: 8px; font-size: 13px; color: #888;">
-              Проверьте консоль браузера (F12) для деталей
-            </p>
-          </div>
-        `;
-        return;
+        users = [];
       }
 
       if (users.length === 0) {
@@ -564,14 +654,10 @@
       
       const user = users.find(u => u.userId === selectedUserId);
       if (user && user.role === 'admin') {
-        window.location.href = '?mode=admin';
+        window.location.href = 'admin_local.html';
       } else {
-        window.location.href = 'index_v2.html?userId=' + selectedUserId;
+        window.location.href = 'index_local.html?userId=' + selectedUserId;
       }
-    }
-
-    function goToAdmin() {
-      window.location.href = 'admin.html';
     }
 
     // ===== Modal Functions =====
@@ -581,7 +667,6 @@
       document.getElementById('userName').value = '';
       document.getElementById('userTelegram').value = '';
       document.getElementById('userRole').value = 'user';
-      document.getElementById('roleGroup').style.display = 'block';
       document.getElementById('userModal').classList.add('show');
       setTimeout(() => document.getElementById('userName').focus(), 100);
     }
@@ -595,7 +680,6 @@
       document.getElementById('userName').value = user.name || '';
       document.getElementById('userTelegram').value = user.telegramId || '';
       document.getElementById('userRole').value = user.role || 'user';
-      document.getElementById('roleGroup').style.display = 'block';
       document.getElementById('userModal').classList.add('show');
       setTimeout(() => document.getElementById('userName').focus(), 100);
     }
@@ -605,87 +689,46 @@
       editingUserId = null;
     }
 
-    async function saveUser() {
+    function saveUser() {
       const name = document.getElementById('userName').value.trim();
       const telegramId = document.getElementById('userTelegram').value.trim();
       const role = document.getElementById('userRole').value;
-
+      
       if (!name) {
         alert('Введите имя');
         return;
       }
-
-      // Проверка API URL
-      const apiUrl = localStorage.getItem(API_URL_KEY);
-      if (!apiUrl) {
-        alert('❌ API URL не настроен!\\n\\n1. Откройте test_setup.html\\n2. Введите URL Google Apps Script\\n3. Сохраните URL\\n4. Вернитесь на эту страницу');
-        window.location.href = 'test_setup.html';
-        return;
+      
+      if (editingUserId) {
+        updateUser(editingUserId, name, telegramId, role);
+      } else {
+        addUser(name, telegramId, role);
       }
-
-      try {
-        console.log('Saving user:', { name, telegramId, role });
-        
-        if (editingUserId) {
-          const result = await apiJsonp('updateUser', {
-            userId: editingUserId,
-            name,
-            telegramId,
-            role
-          });
-          console.log('Update result:', result);
-        } else {
-          const result = await apiJsonp('addUser', {
-            name,
-            telegramId,
-            role
-          });
-          console.log('Add user result:', result);
-        }
-
-        closeUserModal();
-        
-        console.log('Reloading users...');
-        await loadUsers();
-        console.log('Users loaded:', users);
-
-        if (editingUserId && selectedUserId === editingUserId) {
-          const updatedUser = users.find(u => u.userId === editingUserId);
-          if (updatedUser) selectedUserId = updatedUser.userId;
-        }
-        
-        // Показываем успешное сообщение
-        if (!editingUserId) {
-          alert('✅ Пользователь "' + name + '" успешно добавлен!');
-        }
-      } catch (e) {
-        console.error('saveUser error:', e);
-        alert('❌ Ошибка сохранения: ' + e.message + '\\n\\nПроверьте консоль браузера (F12) для деталей.');
+      
+      closeUserModal();
+      loadUsers();
+      
+      if (editingUserId && selectedUserId === editingUserId) {
+        const updatedUser = users.find(u => u.userId === editingUserId);
+        if (updatedUser) selectedUserId = updatedUser.userId;
+      }
+      
+      if (!editingUserId) {
+        alert('✅ Пользователь "' + name + '" успешно добавлен!');
       }
     }
 
-    async function deleteUser(userId) {
+    function deleteUser(userId) {
       if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) return;
       
-      try {
-        await apiJsonp('deleteUser', { userId });
-        
-        if (selectedUserId === userId) {
-          selectedUserId = null;
-          document.getElementById('continueBtn').classList.remove('active');
-        }
-        
-        await loadUsers();
-      } catch (e) {
-        alert('Ошибка: ' + e.message);
+      deleteUser(userId);
+      
+      if (selectedUserId === userId) {
+        selectedUserId = null;
+        document.getElementById('continueBtn').classList.remove('active');
       }
-    }
-
-    // ===== Utilities =====
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+      
+      loadUsers();
     }
 
     // ===== Event Listeners =====
@@ -705,6 +748,7 @@
     });
 
     // ===== Initialization =====
+    initStorage();
     loadUsers();
   </script>
 </body>
