@@ -76,15 +76,162 @@
       background: #f5f7fa;
       color: #666;
     }
-    
+
     .btn-danger {
       background: #ffebee;
       color: #c62828;
     }
-    
+
     .btn-success {
       background: #e8f5e9;
       color: #2e7d32;
+    }
+    
+    /* Settings */
+    .settings-container {
+      position: relative;
+    }
+    
+    .settings-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: white;
+      transition: all 0.3s;
+    }
+    
+    .settings-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .settings-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      padding: 16px;
+      z-index: 1000;
+      min-width: 220px;
+      border: 1px solid #e1e5eb;
+    }
+    
+    .settings-dropdown.show {
+      display: block;
+    }
+    
+    .settings-dropdown h3 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .font-size-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .font-size-control button {
+      padding: 6px 10px;
+      border: 2px solid #667eea;
+      border-radius: 6px;
+      background: white;
+      color: #667eea;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 32px;
+    }
+    
+    .font-size-control button:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .font-size-value {
+      font-size: 13px;
+      color: #333;
+      min-width: 40px;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .bold-btn {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #667eea;
+      border-radius: 6px;
+      background: white;
+      color: #667eea;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+    
+    .bold-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .bold-btn.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .reset-btn {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #dc3545;
+      border-radius: 6px;
+      background: white;
+      color: #dc3545;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .reset-btn:hover {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .color-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .color-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
     }
     
     .card {
@@ -255,27 +402,27 @@
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: 12px;
+      margin-bottom: 16px;
     }
-    
+
     .stat-card {
       background: white;
       border-radius: 12px;
-      padding: 20px;
+      padding: 12px 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
-    
+
     .stat-value {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
       color: #667eea;
     }
-    
+
     .stat-label {
-      font-size: 13px;
+      font-size: 12px;
       color: #888;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     /* Kanban Board View */
@@ -314,6 +461,26 @@
       align-items: center;
     }
     
+    .sort-btn {
+      background: #90a4ae;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    
+    .sort-btn:hover {
+      background: #78909c;
+    }
+    
+    .sort-btn.active {
+      background: #667eea;
+    }
+    
     .task-count {
       background: rgba(0,0,0,0.1);
       border-radius: 10px;
@@ -347,23 +514,51 @@
     .task-card.in-progress { border-left-color: #2196f3; }
     .task-card.done { border-left-color: #4caf50; }
     
+    /* Приоритетная подсветка */
+    .task-card.planned-active {
+      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+      border-left: 4px solid #ffc107 !important;
+    }
+    
+    .task-card.planned-overdue {
+      background: linear-gradient(135deg, #ffdddd 0%, #ffe6e6 100%);
+      border-left: 4px solid #dc3545 !important;
+    }
+    
+    .task-card.planned-tomorrow {
+      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+      border-left: 4px solid #ffc107 !important;
+    }
+    
+    .task-planned-today {
+      font-weight: 700 !important;
+      color: #c62828 !important;
+    }
+    
+    .task-planned-overdue {
+      font-weight: 600 !important;
+      color: #e65100 !important;
+    }
+    
     .task-title {
-      font-size: 15px;
+      font-size: var(--task-title-font-size, 15px);
+      font-weight: var(--task-title-font-weight, normal);
       color: #333;
       margin-bottom: 10px;
       word-wrap: break-word;
     }
-    
+
     .task-meta {
-      font-size: 12px;
+      font-size: var(--task-meta-font-size, 12px);
+      font-weight: var(--task-meta-font-weight, normal);
       color: #888;
       margin-bottom: 8px;
     }
-    
+
     .task-planned {
-      font-size: 12px;
+      font-size: var(--task-planned-font-size, 12px);
+      font-weight: var(--task-planned-font-weight, normal);
       color: #667eea;
-      font-weight: 600;
       margin-bottom: 8px;
     }
     
@@ -416,6 +611,55 @@
     <div class="header">
       <h1>🔧 Админская панель</h1>
       <div style="display: flex; gap: 12px; align-items: center;">
+        <div class="settings-container">
+          <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
+          <div class="settings-dropdown" id="settingsDropdown">
+            <h3>Заголовок задач</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('title', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValueTitle">15px</span>
+              <button onclick="changeFontSize('title', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnTitle" onclick="toggleBold('title')">Жирный</button>
+
+            <h3 style="margin-top: 12px;">Даты и длительность</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('meta', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValueMeta">12px</span>
+              <button onclick="changeFontSize('meta', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnMeta" onclick="toggleBold('meta')">Жирные даты</button>
+
+            <h3 style="margin-top: 12px;">Плановая дата</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('planned', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValuePlanned">12px</span>
+              <button onclick="changeFontSize('planned', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnPlanned" onclick="toggleBold('planned')">Жирная</button>
+
+            <button class="reset-btn" onclick="resetFontSettings()" style="margin-top: 12px;">Сбросить всё</button>
+
+            <h3 style="margin-top: 16px;">Цвета столбцов</h3>
+            <div class="color-settings">
+              <div class="color-row">
+                <span>📝 Задания:</span>
+                <input type="color" id="todoHeaderColor" value="#fff3e0" onchange="updateColumnColors()">
+                <input type="color" id="todoBgColor" value="#fff8e1" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>🔄 В работе:</span>
+                <input type="color" id="inProgressHeaderColor" value="#e3f2fd" onchange="updateColumnColors()">
+                <input type="color" id="inProgressBgColor" value="#e3f2fd" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>✅ Готово:</span>
+                <input type="color" id="doneHeaderColor" value="#e8f5e9" onchange="updateColumnColors()">
+                <input type="color" id="doneBgColor" value="#e8f5e9" onchange="updateColumnColors()">
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="view-toggle">
           <button id="viewTableBtn" class="active" onclick="setView('table')">📊 Таблица</button>
           <button id="viewBoardBtn" onclick="setView('board')">📋 Доска</button>
@@ -468,18 +712,21 @@
         <div class="column todo" data-status="todo">
           <div class="column-header">
             <span>📝 Задания<span class="task-count" id="boardCountTodo">0</span></span>
+            <button class="sort-btn" data-status="todo" onclick="sortBoardTasks('todo')">📅↑↓</button>
           </div>
           <div class="task-list" id="boardTodoTasks"></div>
         </div>
         <div class="column in-progress" data-status="in-progress">
           <div class="column-header">
             <span>🔄 В работе<span class="task-count" id="boardCountInProgress">0</span></span>
+            <button class="sort-btn" data-status="in-progress" onclick="sortBoardTasks('in-progress')">📅↑↓</button>
           </div>
           <div class="task-list" id="boardInProgressTasks"></div>
         </div>
         <div class="column done" data-status="done">
           <div class="column-header">
             <span>✅ Готово<span class="task-count" id="boardCountDone">0</span></span>
+            <button class="sort-btn" data-status="done" onclick="sortBoardTasks('done')">📅↑↓</button>
           </div>
           <div class="task-list" id="boardDoneTasks"></div>
         </div>
@@ -617,6 +864,23 @@
       return `${y}-${m}-${d}`;
     }
 
+    function getDateOffsetStr(daysOffset) {
+      const date = new Date();
+      date.setDate(date.getDate() + daysOffset);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDateWithDay(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      const date = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
     function formatDate(dateStr) {
       if (!dateStr) return '';
       const parts = dateStr.split('-');
@@ -720,23 +984,197 @@
     let editingTaskId = null;
     let editingUserId = null;
     let currentView = 'table';
+    let sortState = { 'todo': null, 'in-progress': null, 'done': null };
+
+    // ===== Font Settings Config =====
+    const FONT_SETTINGS = {
+      title: {
+        storageSizeKey: 'taskTitleFontSize',
+        storageBoldKey: 'taskTitleFontBold',
+        cssSizeVar: '--task-title-font-size',
+        cssWeightVar: '--task-title-font-weight',
+        defaultSize: 15,
+        min: 12,
+        max: 40,
+        valueElementId: 'fontSizeValueTitle',
+        boldButtonId: 'boldBtnTitle'
+      },
+      meta: {
+        storageSizeKey: 'taskMetaFontSize',
+        storageBoldKey: 'taskMetaFontBold',
+        cssSizeVar: '--task-meta-font-size',
+        cssWeightVar: '--task-meta-font-weight',
+        defaultSize: 12,
+        min: 10,
+        max: 30,
+        valueElementId: 'fontSizeValueMeta',
+        boldButtonId: 'boldBtnMeta'
+      },
+      planned: {
+        storageSizeKey: 'taskPlannedFontSize',
+        storageBoldKey: 'taskPlannedFontBold',
+        cssSizeVar: '--task-planned-font-size',
+        cssWeightVar: '--task-planned-font-weight',
+        defaultSize: 12,
+        min: 10,
+        max: 30,
+        valueElementId: 'fontSizeValuePlanned',
+        boldButtonId: 'boldBtnPlanned'
+      }
+    };
+
+    // ===== Settings Functions =====
+    function toggleSettings() {
+      const dropdown = document.getElementById('settingsDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    function changeFontSize(type, delta) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const currentSize = parseInt(localStorage.getItem(cfg.storageSizeKey)) || cfg.defaultSize;
+      let newSize = currentSize + delta;
+      newSize = Math.max(cfg.min, Math.min(cfg.max, newSize));
+      setFontSize(type, newSize);
+    }
+
+    function setFontSize(type, size) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const root = document.documentElement;
+      root.style.setProperty(cfg.cssSizeVar, size + 'px');
+      localStorage.setItem(cfg.storageSizeKey, size);
+      updateFontSizeDisplay(type, size);
+    }
+
+    function updateFontSizeDisplay(type, size) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const valueEl = document.getElementById(cfg.valueElementId);
+      if (valueEl) {
+        valueEl.textContent = size + 'px';
+      }
+    }
+
+    function resetFontSettings() {
+      Object.keys(FONT_SETTINGS).forEach(type => {
+        const cfg = FONT_SETTINGS[type];
+        setFontSize(type, cfg.defaultSize);
+        localStorage.setItem(cfg.storageBoldKey, 'false');
+        const root = document.documentElement;
+        root.style.setProperty(cfg.cssWeightVar, 'normal');
+        updateBoldButton(type, false);
+      });
+    }
+
+    function toggleBold(type) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const isBold = localStorage.getItem(cfg.storageBoldKey) === 'true';
+      const newBold = !isBold;
+      localStorage.setItem(cfg.storageBoldKey, newBold);
+      const root = document.documentElement;
+      root.style.setProperty(cfg.cssWeightVar, newBold ? 'bold' : 'normal');
+      updateBoldButton(type, newBold);
+    }
+
+    function updateBoldButton(type, isBold) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const btn = document.getElementById(cfg.boldButtonId);
+      if (btn) {
+        btn.classList.toggle('active', isBold);
+      }
+    }
+
+    function loadFontSettings() {
+      Object.keys(FONT_SETTINGS).forEach(type => {
+        const cfg = FONT_SETTINGS[type];
+
+        const savedSize = localStorage.getItem(cfg.storageSizeKey);
+        const sizeToApply = savedSize ? parseInt(savedSize) : cfg.defaultSize;
+        setFontSize(type, sizeToApply);
+
+        const isBold = localStorage.getItem(cfg.storageBoldKey) === 'true';
+        const root = document.documentElement;
+        root.style.setProperty(cfg.cssWeightVar, isBold ? 'bold' : 'normal');
+        updateBoldButton(type, isBold);
+      });
+    }
+
+    function updateColumnColors() {
+      const colors = {
+        todo: {
+          header: document.getElementById('todoHeaderColor').value,
+          bg: document.getElementById('todoBgColor').value
+        },
+        inProgress: {
+          header: document.getElementById('inProgressHeaderColor').value,
+          bg: document.getElementById('inProgressBgColor').value
+        },
+        done: {
+          header: document.getElementById('doneHeaderColor').value,
+          bg: document.getElementById('doneBgColor').value
+        }
+      };
+
+      localStorage.setItem('columnColors', JSON.stringify(colors));
+
+      const root = document.documentElement;
+      root.style.setProperty('--bg-todo-header', colors.todo.header);
+      root.style.setProperty('--bg-progress-header', colors.inProgress.header);
+      root.style.setProperty('--bg-done-header', colors.done.header);
+      root.style.setProperty('--bg-todo', colors.todo.bg);
+      root.style.setProperty('--bg-progress', colors.inProgress.bg);
+      root.style.setProperty('--bg-done', colors.done.bg);
+    }
+
+    function loadColumnColors() {
+      const saved = localStorage.getItem('columnColors');
+      if (saved) {
+        const colors = JSON.parse(saved);
+        document.getElementById('todoHeaderColor').value = colors.todo.header;
+        document.getElementById('todoBgColor').value = colors.todo.bg;
+        document.getElementById('inProgressHeaderColor').value = colors.inProgress.header;
+        document.getElementById('inProgressBgColor').value = colors.inProgress.bg;
+        document.getElementById('doneHeaderColor').value = colors.done.header;
+        document.getElementById('doneBgColor').value = colors.done.bg;
+        updateColumnColors();
+      }
+    }
+
+    // Close settings when clicking outside
+    document.addEventListener('click', function(e) {
+      const settingsContainer = document.querySelector('.settings-container');
+      const dropdown = document.getElementById('settingsDropdown');
+      if (settingsContainer && !settingsContainer.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
 
     // ===== View Toggle =====
     function setView(view) {
       currentView = view;
-      
+
       const boardView = document.getElementById('boardView');
       const tableView = document.getElementById('tableView');
       const viewTableBtn = document.getElementById('viewTableBtn');
       const viewBoardBtn = document.getElementById('viewBoardBtn');
-      
+
       if (view === 'board') {
         boardView.classList.add('active');
         tableView.classList.add('hidden');
         viewBoardBtn.classList.add('active');
         viewTableBtn.classList.remove('active');
         populateBoardFilters();
-        renderBoardView();
+        // Используем filteredTasks если есть, иначе tasks
+        const data = filteredTasks.length ? filteredTasks : tasks;
+        renderBoardViewWithData(data);
       } else {
         boardView.classList.remove('active');
         tableView.classList.remove('hidden');
@@ -749,15 +1187,15 @@
     function populateBoardFilters() {
       const select = document.getElementById('filterUserBoard');
       const currentValue = select.value;
-      select.innerHTML = '<option value="">Все пользователи</option>';
-      
+      select.innerHTML = '<option value="">👤 Все пользователи</option>';
+
       users.forEach(user => {
         const option = document.createElement('option');
         option.value = user.userId;
         option.textContent = user.name + (user.role === 'admin' ? ' (Админ)' : '');
         select.appendChild(option);
       });
-      
+
       // Сохраняем выбранное значение
       if (currentValue) {
         select.value = currentValue;
@@ -776,12 +1214,12 @@
         return true;
       });
 
-      // Синхронизируем фильтры с таблицей
+      // Синхронизием фильтры с таблицей
       document.getElementById('filterUser').value = userId;
       document.getElementById('filterStatus').value = status;
       document.getElementById('filterSearch').value = search;
 
-      renderBoardView();
+      renderBoardViewWithData(filteredTasks);
       updateStats();
     }
 
@@ -799,40 +1237,111 @@
     }
 
     // ===== Board View Rendering =====
-    function renderBoardView() {
-      const data = filteredTasks.length ? filteredTasks : tasks;
-      
+    function renderBoardViewWithData(data) {
+      if (!data || data.length === 0) {
+        // Показываем пустое состояние
+        document.getElementById('boardTodoTasks').innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">📭 Задач нет</div>';
+        document.getElementById('boardInProgressTasks').innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">📭 Задач нет</div>';
+        document.getElementById('boardDoneTasks').innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">📭 Задач нет</div>';
+        document.getElementById('boardCountTodo').textContent = '0';
+        document.getElementById('boardCountInProgress').textContent = '0';
+        document.getElementById('boardCountDone').textContent = '0';
+        return;
+      }
+
       const todoTasks = data.filter(t => t.status === 'todo');
       const inProgressTasks = data.filter(t => t.status === 'in-progress');
       const doneTasks = data.filter(t => t.status === 'done');
-      
-      document.getElementById('boardCountTodo').textContent = todoTasks.length;
-      document.getElementById('boardCountInProgress').textContent = inProgressTasks.length;
-      document.getElementById('boardCountDone').textContent = doneTasks.length;
-      
-      document.getElementById('boardTodoTasks').innerHTML = todoTasks.map(task => renderTaskCard(task)).join('');
-      document.getElementById('boardInProgressTasks').innerHTML = inProgressTasks.map(task => renderTaskCard(task)).join('');
-      document.getElementById('boardDoneTasks').innerHTML = doneTasks.map(task => renderTaskCard(task)).join('');
+
+      // Сортировка с приоритетами дат
+      const today = getTodayStr();
+
+      const sortTasksByPriority = (tasks, status) => {
+        if (!tasks || tasks.length === 0) return [];
+
+        const activeGroup = tasks.filter(t => t.plannedDate && t.plannedDate <= today);
+        const futureGroup = tasks.filter(t => t.plannedDate && t.plannedDate > today);
+        const noDateGroup = tasks.filter(t => !t.plannedDate);
+
+        const overdueGroup = activeGroup.filter(t => t.plannedDate < today);
+        const todayGroup = activeGroup.filter(t => t.plannedDate === today);
+
+        overdueGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        todayGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        futureGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+
+        if (sortState[status]) {
+          const sortFn = (a, b) => {
+            const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+            const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+            return sortState[status] === 'asc' ? dateA - dateB : dateB - dateA;
+          };
+          todayGroup.sort(sortFn);
+          overdueGroup.sort(sortFn);
+          futureGroup.sort(sortFn);
+          noDateGroup.sort(sortFn);
+        }
+
+        return [...todayGroup, ...overdueGroup, ...futureGroup, ...noDateGroup];
+      };
+
+      const sortedTodo = sortTasksByPriority(todoTasks, 'todo');
+      const sortedInProgress = sortTasksByPriority(inProgressTasks, 'in-progress');
+      const sortedDone = sortTasksByPriority(doneTasks, 'done');
+
+      document.getElementById('boardCountTodo').textContent = sortedTodo.length;
+      document.getElementById('boardCountInProgress').textContent = sortedInProgress.length;
+      document.getElementById('boardCountDone').textContent = sortedDone.length;
+
+      document.getElementById('boardTodoTasks').innerHTML = sortedTodo.map(task => renderTaskCard(task)).join('');
+      document.getElementById('boardInProgressTasks').innerHTML = sortedInProgress.map(task => renderTaskCard(task)).join('');
+      document.getElementById('boardDoneTasks').innerHTML = sortedDone.map(task => renderTaskCard(task)).join('');
+    }
+
+    function renderBoardView() {
+      const data = filteredTasks.length ? filteredTasks : tasks;
+      renderBoardViewWithData(data);
     }
     
     function renderTaskCard(task) {
       const assignee = users.find(u => u.userId === task.assignedTo);
       const assigneeName = assignee ? assignee.name : 'Не назначен';
       
+      // Приоритетная подсветка
+      let cardClass = 'task-card ' + task.status;
+      if (task.plannedDate && task.status !== 'done') {
+        const today = getTodayStr();
+        const tomorrow = getDateOffsetStr(1);
+        
+        if (task.plannedDate < today) {
+          cardClass += ' planned-overdue';
+        } else if (task.plannedDate === today) {
+          cardClass += ' planned-active';
+        } else if (task.plannedDate === tomorrow) {
+          cardClass += ' planned-tomorrow';
+        }
+      }
+      
       let plannedDateHtml = '';
       if (task.plannedDate) {
         const today = getTodayStr();
-        if (task.plannedDate < today && task.status !== 'done') {
-          plannedDateHtml = `<div class="task-planned" style="color: #c62828;">📌 Просрочено: ${formatDate(task.plannedDate)}</div>`;
+        const tomorrow = getDateOffsetStr(1);
+        
+        if (task.status === 'done') {
+          plannedDateHtml = `<div class="task-planned">📌 Было на: ${formatDateWithDay(task.plannedDate)}</div>`;
+        } else if (task.plannedDate < today) {
+          plannedDateHtml = `<div class="task-planned task-planned-overdue">📌 Просрочено: ${formatDate(task.plannedDate)}</div>`;
         } else if (task.plannedDate === today) {
-          plannedDateHtml = `<div class="task-planned">🎯 СЕГОДНЯ!</div>`;
+          plannedDateHtml = `<div class="task-planned task-planned-today">🎯 СЕГОДНЯ!</div>`;
+        } else if (task.plannedDate === tomorrow) {
+          plannedDateHtml = `<div class="task-planned">📅 Завтра!</div>`;
         } else {
-          plannedDateHtml = `<div class="task-planned">📅 ${formatDate(task.plannedDate)}</div>`;
+          plannedDateHtml = `<div class="task-planned">📅 ${formatDateWithDay(task.plannedDate)}</div>`;
         }
       }
       
       return `
-        <div class="task-card ${task.status}" data-id="${task.id}">
+        <div class="${cardClass}" data-id="${task.id}">
           <div class="task-title">${escapeHtml(task.title)}</div>
           ${plannedDateHtml}
           <div class="task-assignee">👤 ${escapeHtml(assigneeName)}</div>
@@ -851,21 +1360,53 @@
     function moveTask(taskId, direction) {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
-      
+
       let newStatus;
       if (direction === 'forward') {
         newStatus = task.status === 'todo' ? 'in-progress' : 'done';
       } else {
         newStatus = task.status === 'done' ? 'in-progress' : 'todo';
       }
-      
+
       updateTask(taskId, { status: newStatus });
       loadData();
-      if (currentView === 'board') renderBoardView();
+      if (currentView === 'board') {
+        const data = filteredTasks.length ? filteredTasks : tasks;
+        renderBoardViewWithData(data);
+      }
+    }
+    
+    function sortBoardTasks(status) {
+      if (sortState[status] === null) {
+        sortState[status] = 'asc';
+      } else if (sortState[status] === 'asc') {
+        sortState[status] = 'desc';
+      } else {
+        sortState[status] = null;
+      }
+
+      // Обновляем кнопки
+      document.querySelectorAll('.sort-btn').forEach(btn => {
+        const btnStatus = btn.dataset.status;
+        if (sortState[btnStatus]) {
+          btn.classList.add('active');
+          btn.textContent = sortState[btnStatus] === 'asc' ? '📅 ↑' : '📅 ↓';
+        } else {
+          btn.textContent = '📅↑↓';
+        }
+      });
+
+      if (currentView === 'board') {
+        const data = filteredTasks.length ? filteredTasks : tasks;
+        renderBoardViewWithData(data);
+      }
     }
 
     // ===== Load Data =====
     function loadData() {
+      loadFontSettings();
+      loadColumnColors();
+      
       users = getUsers();
       tasks = getTasks();
       filteredTasks = [...tasks];
@@ -876,9 +1417,9 @@
       renderTasksTable();
       renderUsersTable();
       updateStats();
-      
+
       if (currentView === 'board') {
-        renderBoardView();
+        renderBoardViewWithData(filteredTasks);
       }
     }
 

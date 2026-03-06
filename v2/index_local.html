@@ -53,6 +53,153 @@
     }
     .btn-success:hover { filter: brightness(1.1); }
     
+    /* Settings */
+    .settings-container {
+      position: relative;
+    }
+    
+    .settings-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: white;
+      transition: all 0.3s;
+    }
+    
+    .settings-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .settings-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      padding: 16px;
+      z-index: 1000;
+      min-width: 220px;
+      border: 1px solid #e1e5eb;
+    }
+    
+    .settings-dropdown.show {
+      display: block;
+    }
+    
+    .settings-dropdown h3 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .font-size-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .font-size-control button {
+      padding: 6px 10px;
+      border: 2px solid #667eea;
+      border-radius: 6px;
+      background: white;
+      color: #667eea;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 32px;
+    }
+    
+    .font-size-control button:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .font-size-value {
+      font-size: 13px;
+      color: #333;
+      min-width: 40px;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .bold-btn {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #667eea;
+      border-radius: 6px;
+      background: white;
+      color: #667eea;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+    
+    .bold-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+    
+    .bold-btn.active {
+      background: #667eea;
+      color: white;
+    }
+    
+    .reset-btn {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #dc3545;
+      border-radius: 6px;
+      background: white;
+      color: #dc3545;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .reset-btn:hover {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .color-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .color-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+    }
+
     /* Board */
     .board {
       display: grid;
@@ -77,6 +224,26 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+    
+    .sort-btn {
+      background: #90a4ae;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    
+    .sort-btn:hover {
+      background: #78909c;
+    }
+    
+    .sort-btn.active {
+      background: #667eea;
     }
     
     .task-count {
@@ -112,23 +279,51 @@
     .task-card.in-progress { border-left-color: #2196f3; }
     .task-card.done { border-left-color: #4caf50; }
     
+    /* Приоритетная подсветка */
+    .task-card.planned-active {
+      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+      border-left: 4px solid #ffc107 !important;
+    }
+    
+    .task-card.planned-overdue {
+      background: linear-gradient(135deg, #ffdddd 0%, #ffe6e6 100%);
+      border-left: 4px solid #dc3545 !important;
+    }
+    
+    .task-card.planned-tomorrow {
+      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+      border-left: 4px solid #ffc107 !important;
+    }
+    
+    .task-planned-today {
+      font-weight: 700 !important;
+      color: #c62828 !important;
+    }
+    
+    .task-planned-overdue {
+      font-weight: 600 !important;
+      color: #e65100 !important;
+    }
+    
     .task-title {
-      font-size: 15px;
+      font-size: var(--task-title-font-size, 15px);
+      font-weight: var(--task-title-font-weight, normal);
       color: #333;
       margin-bottom: 10px;
       word-wrap: break-word;
     }
-    
+
     .task-meta {
-      font-size: 12px;
+      font-size: var(--task-meta-font-size, 12px);
+      font-weight: var(--task-meta-font-weight, normal);
       color: #888;
       margin-bottom: 8px;
     }
-    
+
     .task-planned {
-      font-size: 12px;
+      font-size: var(--task-planned-font-size, 12px);
+      font-weight: var(--task-planned-font-weight, normal);
       color: #667eea;
-      font-weight: 600;
       margin-bottom: 8px;
     }
     
@@ -451,6 +646,55 @@
       </div>
       <div class="header-right">
         <a href="select_user_local.html" class="btn btn-light">🔄 Сменить</a>
+        <div class="settings-container">
+          <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
+          <div class="settings-dropdown" id="settingsDropdown">
+            <h3>Заголовок задач</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('title', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValueTitle">16px</span>
+              <button onclick="changeFontSize('title', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnTitle" onclick="toggleBold('title')">Жирный</button>
+
+            <h3 style="margin-top: 12px;">Даты и длительность</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('meta', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValueMeta">13px</span>
+              <button onclick="changeFontSize('meta', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnMeta" onclick="toggleBold('meta')">Жирные даты</button>
+
+            <h3 style="margin-top: 12px;">Плановая дата</h3>
+            <div class="font-size-control">
+              <button onclick="changeFontSize('planned', -2)">−</button>
+              <span class="font-size-value" id="fontSizeValuePlanned">13px</span>
+              <button onclick="changeFontSize('planned', 2)">+</button>
+            </div>
+            <button class="bold-btn" id="boldBtnPlanned" onclick="toggleBold('planned')">Жирная</button>
+
+            <button class="reset-btn" onclick="resetFontSettings()" style="margin-top: 12px;">Сбросить всё</button>
+
+            <h3 style="margin-top: 16px;">Цвета столбцов</h3>
+            <div class="color-settings">
+              <div class="color-row">
+                <span>📝 Задания:</span>
+                <input type="color" id="todoHeaderColor" value="#fff3e0" onchange="updateColumnColors()">
+                <input type="color" id="todoBgColor" value="#fff8e1" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>🔄 В работе:</span>
+                <input type="color" id="inProgressHeaderColor" value="#e3f2fd" onchange="updateColumnColors()">
+                <input type="color" id="inProgressBgColor" value="#e3f2fd" onchange="updateColumnColors()">
+              </div>
+              <div class="color-row">
+                <span>✅ Готово:</span>
+                <input type="color" id="doneHeaderColor" value="#e8f5e9" onchange="updateColumnColors()">
+                <input type="color" id="doneBgColor" value="#e8f5e9" onchange="updateColumnColors()">
+              </div>
+            </div>
+          </div>
+        </div>
         <button class="btn btn-success" id="openAddModal">+ Добавить задачу</button>
       </div>
     </header>
@@ -575,6 +819,178 @@
     let selectedPlannedDays = null;
     let pickerYear, pickerMonth;
 
+    // ===== Font Settings Config =====
+    const FONT_SETTINGS = {
+      title: {
+        storageSizeKey: 'taskTitleFontSize',
+        storageBoldKey: 'taskTitleFontBold',
+        cssSizeVar: '--task-title-font-size',
+        cssWeightVar: '--task-title-font-weight',
+        defaultSize: 15,
+        min: 12,
+        max: 40,
+        valueElementId: 'fontSizeValueTitle',
+        boldButtonId: 'boldBtnTitle'
+      },
+      meta: {
+        storageSizeKey: 'taskMetaFontSize',
+        storageBoldKey: 'taskMetaFontBold',
+        cssSizeVar: '--task-meta-font-size',
+        cssWeightVar: '--task-meta-font-weight',
+        defaultSize: 12,
+        min: 10,
+        max: 30,
+        valueElementId: 'fontSizeValueMeta',
+        boldButtonId: 'boldBtnMeta'
+      },
+      planned: {
+        storageSizeKey: 'taskPlannedFontSize',
+        storageBoldKey: 'taskPlannedFontBold',
+        cssSizeVar: '--task-planned-font-size',
+        cssWeightVar: '--task-planned-font-weight',
+        defaultSize: 12,
+        min: 10,
+        max: 30,
+        valueElementId: 'fontSizeValuePlanned',
+        boldButtonId: 'boldBtnPlanned'
+      }
+    };
+
+    // ===== Settings Functions =====
+    function toggleSettings() {
+      const dropdown = document.getElementById('settingsDropdown');
+      dropdown.classList.toggle('show');
+    }
+
+    function changeFontSize(type, delta) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const currentSize = parseInt(localStorage.getItem(cfg.storageSizeKey)) || cfg.defaultSize;
+      let newSize = currentSize + delta;
+      newSize = Math.max(cfg.min, Math.min(cfg.max, newSize));
+      setFontSize(type, newSize);
+    }
+
+    function setFontSize(type, size) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const root = document.documentElement;
+      root.style.setProperty(cfg.cssSizeVar, size + 'px');
+      localStorage.setItem(cfg.storageSizeKey, size);
+      updateFontSizeDisplay(type, size);
+    }
+
+    function updateFontSizeDisplay(type, size) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const valueEl = document.getElementById(cfg.valueElementId);
+      if (valueEl) {
+        valueEl.textContent = size + 'px';
+      }
+    }
+
+    function resetFontSettings() {
+      Object.keys(FONT_SETTINGS).forEach(type => {
+        const cfg = FONT_SETTINGS[type];
+        setFontSize(type, cfg.defaultSize);
+        localStorage.setItem(cfg.storageBoldKey, 'false');
+        const root = document.documentElement;
+        root.style.setProperty(cfg.cssWeightVar, 'normal');
+        updateBoldButton(type, false);
+      });
+    }
+
+    function toggleBold(type) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const isBold = localStorage.getItem(cfg.storageBoldKey) === 'true';
+      const newBold = !isBold;
+      localStorage.setItem(cfg.storageBoldKey, newBold);
+      const root = document.documentElement;
+      root.style.setProperty(cfg.cssWeightVar, newBold ? 'bold' : 'normal');
+      updateBoldButton(type, newBold);
+    }
+
+    function updateBoldButton(type, isBold) {
+      const cfg = FONT_SETTINGS[type];
+      if (!cfg) return;
+
+      const btn = document.getElementById(cfg.boldButtonId);
+      if (btn) {
+        btn.classList.toggle('active', isBold);
+      }
+    }
+
+    function loadFontSettings() {
+      Object.keys(FONT_SETTINGS).forEach(type => {
+        const cfg = FONT_SETTINGS[type];
+
+        const savedSize = localStorage.getItem(cfg.storageSizeKey);
+        const sizeToApply = savedSize ? parseInt(savedSize) : cfg.defaultSize;
+        setFontSize(type, sizeToApply);
+
+        const isBold = localStorage.getItem(cfg.storageBoldKey) === 'true';
+        const root = document.documentElement;
+        root.style.setProperty(cfg.cssWeightVar, isBold ? 'bold' : 'normal');
+        updateBoldButton(type, isBold);
+      });
+    }
+
+    function updateColumnColors() {
+      const colors = {
+        todo: {
+          header: document.getElementById('todoHeaderColor').value,
+          bg: document.getElementById('todoBgColor').value
+        },
+        inProgress: {
+          header: document.getElementById('inProgressHeaderColor').value,
+          bg: document.getElementById('inProgressBgColor').value
+        },
+        done: {
+          header: document.getElementById('doneHeaderColor').value,
+          bg: document.getElementById('doneBgColor').value
+        }
+      };
+
+      localStorage.setItem('columnColors', JSON.stringify(colors));
+
+      // Apply colors
+      const root = document.documentElement;
+      root.style.setProperty('--bg-todo-header', colors.todo.header);
+      root.style.setProperty('--bg-progress-header', colors.inProgress.header);
+      root.style.setProperty('--bg-done-header', colors.done.header);
+      root.style.setProperty('--bg-todo', colors.todo.bg);
+      root.style.setProperty('--bg-progress', colors.inProgress.bg);
+      root.style.setProperty('--bg-done', colors.done.bg);
+    }
+
+    function loadColumnColors() {
+      const saved = localStorage.getItem('columnColors');
+      if (saved) {
+        const colors = JSON.parse(saved);
+        document.getElementById('todoHeaderColor').value = colors.todo.header;
+        document.getElementById('todoBgColor').value = colors.todo.bg;
+        document.getElementById('inProgressHeaderColor').value = colors.inProgress.header;
+        document.getElementById('inProgressBgColor').value = colors.inProgress.bg;
+        document.getElementById('doneHeaderColor').value = colors.done.header;
+        document.getElementById('doneBgColor').value = colors.done.bg;
+        updateColumnColors();
+      }
+    }
+
+    // Close settings when clicking outside
+    document.addEventListener('click', function(e) {
+      const settingsContainer = document.querySelector('.settings-container');
+      const dropdown = document.getElementById('settingsDropdown');
+      if (settingsContainer && !settingsContainer.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
+
     // ===== LocalStorage API =====
     function getUsers() {
       return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
@@ -638,6 +1054,7 @@
     let tasks = [];
     let currentUserId = null;
     let users = [];
+    let sortState = { 'todo': null, 'in-progress': null, 'done': null };
 
     const statusLabels = {
       'todo': '📝 Задания',
@@ -678,26 +1095,74 @@
         <div class="column todo" data-status="todo">
           <div class="column-header">
             <span>${statusLabels['todo']}<span class="task-count" id="countTodo">0</span></span>
+            <button class="sort-btn" data-status="todo" onclick="sortTasks('todo')">📅↑↓</button>
           </div>
           <div class="task-list" id="todo-tasks"></div>
         </div>
         <div class="column in-progress" data-status="in-progress">
           <div class="column-header">
             <span>${statusLabels['in-progress']}<span class="task-count" id="countInProgress">0</span></span>
+            <button class="sort-btn" data-status="in-progress" onclick="sortTasks('in-progress')">📅↑↓</button>
           </div>
           <div class="task-list" id="in-progress-tasks"></div>
         </div>
         <div class="column done" data-status="done">
           <div class="column-header">
             <span>${statusLabels['done']}<span class="task-count" id="countDone">0</span></span>
+            <button class="sort-btn" data-status="done" onclick="sortTasks('done')">📅↑↓</button>
           </div>
           <div class="task-list" id="done-tasks"></div>
         </div>
       `;
 
-      const todoTasks = tasks.filter(t => t.status === 'todo');
-      const inProgressTasks = tasks.filter(t => t.status === 'in-progress');
-      const doneTasks = tasks.filter(t => t.status === 'done');
+      // Sort and filter tasks с приоритетами дат
+      let tasksToRender = [...tasks];
+      ['todo', 'in-progress'].forEach(status => {
+        const statusTasks = tasksToRender.filter(t => t.status === status);
+        const today = getTodayStr();
+
+        const activeGroup = statusTasks.filter(t => t.plannedDate && t.plannedDate <= today);
+        const futureGroup = statusTasks.filter(t => t.plannedDate && t.plannedDate > today);
+        const noDateGroup = statusTasks.filter(t => !t.plannedDate);
+
+        // Split activeGroup into overdue and today (today first, then overdue by date)
+        const overdueGroup = activeGroup.filter(t => t.plannedDate < today);
+        const todayGroup = activeGroup.filter(t => t.plannedDate === today);
+
+        overdueGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        todayGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+        futureGroup.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate));
+
+        if (sortState[status]) {
+          const sortFn = (a, b) => {
+            const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+            const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+            return sortState[status] === 'asc' ? dateA - dateB : dateB - dateA;
+          };
+          todayGroup.sort(sortFn);
+          overdueGroup.sort(sortFn);
+          futureGroup.sort(sortFn);
+          noDateGroup.sort(sortFn);
+        }
+
+        // Приоритет: СЕГОДНЯ → ПРОСРОЧЕНО → БУДУЩЕЕ → БЕЗ ДАТЫ
+        const sorted = [...todayGroup, ...overdueGroup, ...futureGroup, ...noDateGroup];
+        tasksToRender = tasksToRender.filter(t => t.status !== status).concat(sorted);
+      });
+
+      if (sortState['done']) {
+        const doneTasks = tasksToRender.filter(t => t.status === 'done');
+        doneTasks.sort((a, b) => {
+          const dateA = a.startDate ? new Date(a.startDate) : new Date(0);
+          const dateB = b.startDate ? new Date(b.startDate) : new Date(0);
+          return sortState['done'] === 'asc' ? dateA - dateB : dateB - dateA;
+        });
+        tasksToRender = tasksToRender.filter(t => t.status !== 'done').concat(doneTasks);
+      }
+
+      const todoTasks = tasksToRender.filter(t => t.status === 'todo');
+      const inProgressTasks = tasksToRender.filter(t => t.status === 'in-progress');
+      const doneTasks = tasksToRender.filter(t => t.status === 'done');
 
       document.getElementById('countTodo').textContent = todoTasks.length;
       document.getElementById('countInProgress').textContent = inProgressTasks.length;
@@ -706,6 +1171,26 @@
       todoTasks.forEach(task => renderTask(task, 'todo-tasks'));
       inProgressTasks.forEach(task => renderTask(task, 'in-progress-tasks'));
       doneTasks.forEach(task => renderTask(task, 'done-tasks'));
+
+      // Update sort buttons
+      document.querySelectorAll('.sort-btn').forEach(btn => {
+        const btnStatus = btn.dataset.status;
+        if (sortState[btnStatus]) {
+          btn.classList.add('active');
+          btn.textContent = sortState[btnStatus] === 'asc' ? '📅 ↑' : '📅 ↓';
+        }
+      });
+    }
+
+    function sortTasks(status) {
+      if (sortState[status] === null) {
+        sortState[status] = 'asc';
+      } else if (sortState[status] === 'asc') {
+        sortState[status] = 'desc';
+      } else {
+        sortState[status] = null;
+      }
+      renderBoard();
     }
 
     function renderTask(task, containerId) {
@@ -717,18 +1202,38 @@
       card.draggable = true;
       card.dataset.id = task.id;
 
+      // Приоритетная подсветка
+      if (task.plannedDate && task.status !== 'done') {
+        const today = getTodayStr();
+        const tomorrow = getDateOffsetStr(1);
+        
+        if (task.plannedDate < today) {
+          card.classList.add('planned-overdue');
+        } else if (task.plannedDate === today) {
+          card.classList.add('planned-active');
+        } else if (task.plannedDate === tomorrow) {
+          card.classList.add('planned-tomorrow');
+        }
+      }
+
       const assignee = users.find(u => u.userId === task.assignedTo);
       const assigneeName = assignee ? assignee.name : 'Не назначен';
 
       let plannedDateHtml = '';
       if (task.plannedDate) {
         const today = getTodayStr();
-        if (task.plannedDate < today && task.status !== 'done') {
-          plannedDateHtml = `<div class="task-planned" style="color: #c62828;">📌 Просрочено: ${formatDate(task.plannedDate)}</div>`;
+        const tomorrow = getDateOffsetStr(1);
+        
+        if (task.status === 'done') {
+          plannedDateHtml = `<div class="task-planned">📌 Было на: ${formatDateWithDay(task.plannedDate)}</div>`;
+        } else if (task.plannedDate < today) {
+          plannedDateHtml = `<div class="task-planned task-planned-overdue">📌 Просрочено: ${formatDate(task.plannedDate)}</div>`;
         } else if (task.plannedDate === today) {
-          plannedDateHtml = `<div class="task-planned">🎯 СЕГОДНЯ!</div>`;
+          plannedDateHtml = `<div class="task-planned task-planned-today">🎯 СЕГОДНЯ!</div>`;
+        } else if (task.plannedDate === tomorrow) {
+          plannedDateHtml = `<div class="task-planned">📅 Завтра!</div>`;
         } else {
-          plannedDateHtml = `<div class="task-planned">📅 ${formatDate(task.plannedDate)}</div>`;
+          plannedDateHtml = `<div class="task-planned">📅 ${formatDateWithDay(task.plannedDate)}</div>`;
         }
       }
 
@@ -1018,7 +1523,13 @@
     });
 
     // ===== Initialization =====
-    loadUser();
+    function init() {
+      loadFontSettings();
+      loadColumnColors();
+      loadUser();
+    }
+
+    init();
   </script>
 </body>
 </html>
