@@ -364,6 +364,13 @@ function doGet(e) {
         const id = e.parameter.id;
         const status = e.parameter.status;
         result = updateTaskStatus(id, status);
+      } else if (action === 'updateTask') {
+        const id = e.parameter.id;
+        const title = e.parameter.title || '';
+        const status = e.parameter.status || '';
+        const plannedDate = e.parameter.plannedDate || '';
+        const assignedTo = e.parameter.assignedTo || '';
+        result = updateTask(id, { title, status, plannedDate, assignedTo });
       } else if (action === 'deleteTask') {
         const id = e.parameter.id;
         result = deleteTask(id);
