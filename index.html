@@ -1129,6 +1129,8 @@
     let currentUserId = null;
     let users = [];
     let sortState = { 'todo': null, 'in-progress': null, 'done': null };
+    const AUTO_REFRESH_SECONDS = 30;
+    let autoRefreshInterval = null;
 
     const statusLabels = {
       'todo': '📝 Задания',
@@ -1161,6 +1163,34 @@
       setSyncStatus('syncing', '🔄 Загрузка задач...');
       tasks = await getTasks(currentUserId === 'admin' ? 'admin' : currentUserId);
       renderBoard();
+    }
+
+    function startAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+      autoRefreshInterval = setInterval(() => {
+        console.log('Auto-refreshing tasks...');
+        getTasks(currentUserId === 'admin' ? 'admin' : currentUserId)
+          .then(newTasks => {
+            if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+              console.log('Tasks changed, updating board...');
+              tasks = newTasks;
+              renderBoard();
+              setSyncStatus('ready', '✅ Обновлено');
+              setTimeout(() => setSyncStatus('ready', ''), 2000);
+            }
+          })
+          .catch(e => console.error('Auto-refresh error:', e));
+      }, AUTO_REFRESH_SECONDS * 1000);
+      console.log('Auto-refresh started (every ' + AUTO_REFRESH_SECONDS + 's)');
+    }
+
+    function stopAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
     }
 
     // ===== Board Rendering =====
@@ -1606,6 +1636,7 @@
       loadFontSettings();
       loadColumnColors();
       await loadUser();
+      startAutoRefresh();
     }
 
     init();
