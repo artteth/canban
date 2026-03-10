@@ -645,7 +645,7 @@
         <div class="user-badge" id="userBadge">👤 Загрузка...</div>
       </div>
       <div class="header-right">
-        <a href="select_user_local.html" class="btn btn-light">🔄 Сменить</a>
+        <a href="select_user.html" class="btn btn-light">🔄 Сменить</a>
         <div class="settings-container">
           <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
           <div class="settings-dropdown" id="settingsDropdown">
@@ -1066,9 +1066,9 @@
     function loadUser() {
       const urlParams = new URLSearchParams(window.location.search);
       currentUserId = urlParams.get('userId') || localStorage.getItem(CURRENT_USER_KEY);
-      
+
       if (!currentUserId) {
-        window.location.href = 'select_user_local.html';
+        window.location.href = 'select_user.html';
         return;
       }
       
