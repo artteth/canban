@@ -345,7 +345,7 @@ function doGet(e) {
   // JSONP режим для обхода CORS
   if (mode === 'jsonp') {
     const callback = e.parameter.callback || 'callback';
-    
+
     let result;
     try {
       if (action === 'getTasks') {
@@ -364,13 +364,27 @@ function doGet(e) {
       } else if (action === 'deleteTask') {
         const id = e.parameter.id;
         result = deleteTask(id);
+      } else if (action === 'addUser') {
+        const name = e.parameter.name || '';
+        const telegramId = e.parameter.telegramId || '';
+        const role = e.parameter.role || 'user';
+        result = addUser(name, telegramId, role);
+      } else if (action === 'updateUser') {
+        const uid = e.parameter.userId || '';
+        const name = e.parameter.name || '';
+        const telegramId = e.parameter.telegramId || '';
+        const role = e.parameter.role || 'user';
+        result = updateUser(uid, name, telegramId, role);
+      } else if (action === 'deleteUser') {
+        const uid = e.parameter.userId || '';
+        result = deleteUser(uid);
       } else {
         result = { ok: false, error: 'Unknown action' };
       }
     } catch (err) {
       result = { ok: false, error: err.message };
     }
-    
+
     const output = ContentService
       .createTextOutput(callback + '(' + JSON.stringify(result) + ')')
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -418,29 +432,43 @@ function doGet(e) {
 
 function doPost(e) {
   try {
+    Logger.log('=== doPost started ===');
+    Logger.log('e.parameter: ' + JSON.stringify(e.parameter));
+    Logger.log('e.postData exists: ' + (e.postData ? 'yes' : 'no'));
+    Logger.log('e.postData.type: ' + (e.postData ? e.postData.type : 'N/A'));
+    Logger.log('e.postData.length: ' + (e.postData ? e.postData.length : 'N/A'));
+    
+    // Проверяем TG-API режим через URL параметр или через тело запроса
     const isTgApi = (e.parameter && e.parameter.mode === 'tg-api');
     let payload;
-    
+
     if (e.postData && e.postData.contents) {
+      Logger.log('postData.contents length: ' + e.postData.contents.length);
+      Logger.log('postData.contents: ' + e.postData.contents.substring(0, 200));
       try {
         payload = JSON.parse(e.postData.contents);
+        Logger.log('Parsed payload: ' + JSON.stringify(payload));
         if (payload._tgApiMode === true) {
           isTgApi = true;
+          Logger.log('TG-API mode enabled via _tgApiMode');
         }
       } catch (ee) {
         Logger.log('JSON parse error: ' + ee.message);
       }
+    } else {
+      Logger.log('No postData or contents');
     }
 
     // Обработка TG-API запросов
     if (isTgApi && payload) {
+      Logger.log('Processing TG-API action: ' + payload.action);
       const action = payload.action;
-      
+
       switch (action) {
         case 'getTasks':
           const userId = payload.userId || null;
           return jsonResponse(getTasks(userId));
-          
+
         case 'getUsers':
           return jsonResponse(getUsers());
           

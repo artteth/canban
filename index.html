@@ -1015,22 +1015,48 @@
     });
 
     // ===== GOOGLE SHEETS API =====
+    function apiJsonp(action, params = {}) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now();
+        let urlParams = `mode=jsonp&action=${encodeURIComponent(action)}&callback=${callbackName}`;
+        for (const key in params) {
+          if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+            urlParams += `&${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`;
+          }
+        }
+        const url = `${API_URL}?${urlParams}`;
+        console.log('JSONP URL:', url);
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => {
+          setSyncStatus('error', '❌ Ошибка сети');
+          console.error('JSONP script load error');
+          reject(new Error('JSONP request failed'));
+        };
+
+        window[callbackName] = (response) => {
+          console.log('JSONP response for', action, ':', response);
+          if (response && response.ok) {
+            setSyncStatus('ready', '✅ Синхронизировано');
+            setTimeout(() => setSyncStatus('ready', ''), 3000);
+            resolve(response.data || response);
+          } else {
+            setSyncStatus('error', '❌ Ошибка: ' + (response?.error || 'Неизвестная'));
+            reject(new Error(response?.error || 'API error'));
+          }
+          delete window[callbackName];
+          document.body.removeChild(script);
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
     async function apiCall(action, payload = {}) {
       setSyncStatus('syncing', '🔄 Синхронизация...');
       try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ ...payload, _tgApiMode: true })
-        });
-        const result = await response.json();
-        if (result.ok) {
-          setSyncStatus('ready', '✅ Синхронизировано');
-          setTimeout(() => setSyncStatus('ready', ''), 3000);
-        } else {
-          setSyncStatus('error', '❌ Ошибка: ' + (result.error || 'Неизвестная'));
-        }
-        return result;
+        return await apiJsonp(action, payload);
       } catch (e) {
         setSyncStatus('error', '❌ Ошибка сети');
         console.error('API call error:', e);
