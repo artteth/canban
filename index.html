@@ -1074,12 +1074,13 @@
 
     async function getTasks(userId = null) {
       try {
-        const payload = { action: 'getTasks' };
+        const params = {};
         if (userId && userId !== 'admin') {
-          payload.userId = userId;
+          params.userId = userId;
         }
-        const result = await apiCall('getTasks', payload);
-        return result.ok ? (result.data || []) : [];
+        const result = await apiJsonp('getTasks', params);
+        // apiJsonp уже возвращает response.data, но для совместимости проверяем
+        return Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
       } catch (e) {
         console.error('getTasks error:', e);
         return [];

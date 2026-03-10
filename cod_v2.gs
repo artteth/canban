@@ -9,6 +9,14 @@ const LOCK_TIMEOUT_SECONDS = 30;
 const TELEGRAM_BOT_TOKEN = '8664566561:AAEV11uRMZIxmqjcoQybafCWAmQhdoQdbXs';
 
 // ============================================================================
+// Триггеры
+// ============================================================================
+
+function checkUpdates() {
+  // Пустая функция для триггера по времени
+}
+
+// ============================================================================
 // Утилиты
 // ============================================================================
 
@@ -183,7 +191,7 @@ function getTasksData(userId) {
     const sheet = getTasksSheet();
     const data = sheet.getDataRange().getValues();
     const headers = data.shift();
-    
+
     return data
       .filter(row => {
         // Если пользователь не админ — фильтруем по AssignedTo
@@ -427,36 +435,23 @@ function doGet(e) {
 
 function doPost(e) {
   try {
-    Logger.log('=== doPost started ===');
-    Logger.log('e.parameter: ' + JSON.stringify(e.parameter));
-    Logger.log('e.postData exists: ' + (e.postData ? 'yes' : 'no'));
-    Logger.log('e.postData.type: ' + (e.postData ? e.postData.type : 'N/A'));
-    Logger.log('e.postData.length: ' + (e.postData ? e.postData.length : 'N/A'));
-    
     // Проверяем TG-API режим через URL параметр или через тело запроса
     const isTgApi = (e.parameter && e.parameter.mode === 'tg-api');
     let payload;
 
     if (e.postData && e.postData.contents) {
-      Logger.log('postData.contents length: ' + e.postData.contents.length);
-      Logger.log('postData.contents: ' + e.postData.contents.substring(0, 200));
       try {
         payload = JSON.parse(e.postData.contents);
-        Logger.log('Parsed payload: ' + JSON.stringify(payload));
         if (payload._tgApiMode === true) {
           isTgApi = true;
-          Logger.log('TG-API mode enabled via _tgApiMode');
         }
       } catch (ee) {
         Logger.log('JSON parse error: ' + ee.message);
       }
-    } else {
-      Logger.log('No postData or contents');
     }
 
     // Обработка TG-API запросов
     if (isTgApi && payload) {
-      Logger.log('Processing TG-API action: ' + payload.action);
       const action = payload.action;
 
       switch (action) {

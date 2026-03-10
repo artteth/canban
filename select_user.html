@@ -517,13 +517,11 @@
     async function getUsers() {
       try {
         setSyncStatus('syncing', '🔄 Загрузка пользователей...');
-        const response = await fetch(API_URL + '?mode=tg-api&action=getUsers');
-        const result = await response.json();
-        if (result.ok) {
-          setSyncStatus('ready', '✅ Загружено');
-          setTimeout(() => setSyncStatus('ready', ''), 2000);
-        }
-        return result.ok ? (result.data || []) : [];
+        const result = await apiJsonp('getUsers');
+        const users = Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
+        setSyncStatus('ready', '✅ Загружено');
+        setTimeout(() => setSyncStatus('ready', ''), 2000);
+        return users;
       } catch (e) {
         setSyncStatus('error', '❌ Ошибка загрузки');
         console.error('getUsers error:', e);

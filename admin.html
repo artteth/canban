@@ -951,9 +951,8 @@
 
     async function getUsers() {
       try {
-        const response = await fetch(API_URL + '?mode=tg-api&action=getUsers');
-        const result = await response.json();
-        return result.ok ? (result.data || []) : [];
+        const result = await apiJsonp('getUsers');
+        return Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
       } catch (e) {
         console.error('getUsers error:', e);
         return [];
@@ -962,8 +961,8 @@
 
     async function getTasks() {
       try {
-        const result = await apiCall('getTasks', {});
-        return result.ok ? (result.data || []) : [];
+        const result = await apiJsonp('getTasks', {});
+        return Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
       } catch (e) {
         console.error('getTasks error:', e);
         return [];
