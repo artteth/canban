@@ -1318,8 +1318,14 @@
       renderBoard();
     }
 
-    function renderTask(task, containerId) {
-      const container = document.getElementById(containerId);
+    function renderTask(task, appendToColumn = false) {
+      // Определяем контейнер по статусу задачи
+      let container;
+      if (appendToColumn === true) {
+        container = document.getElementById(task.status + '-tasks');
+      } else {
+        container = document.getElementById(appendToColumn);
+      }
       if (!container) return;
 
       const card = document.createElement('div');
@@ -1331,7 +1337,7 @@
       if (task.plannedDate && task.status !== 'done') {
         const today = getTodayStr();
         const tomorrow = getDateOffsetStr(1);
-        
+
         if (task.plannedDate < today) {
           card.classList.add('planned-overdue');
         } else if (task.plannedDate === today) {
@@ -1348,7 +1354,7 @@
       if (task.plannedDate) {
         const today = getTodayStr();
         const tomorrow = getDateOffsetStr(1);
-        
+
         if (task.status === 'done') {
           plannedDateHtml = `<div class="task-planned">📌 Было на: ${formatDateWithDay(task.plannedDate)}</div>`;
         } else if (task.plannedDate < today) {
