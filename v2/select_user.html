@@ -73,7 +73,8 @@
       gap: 12px;
     }
 
-    .user-card:hover {
+    .user-card:hover,
+    .user-card.touch-hover {
       border-color: #667eea;
       background: #f0f4ff;
       transform: translateY(-2px);
@@ -132,14 +133,14 @@
       gap: 8px;
       opacity: 0;
       transition: opacity 0.2s;
+      pointer-events: none;
     }
 
-    .user-card:hover .user-actions {
+    .user-card:hover .user-actions,
+    .user-card.selected .user-actions,
+    .user-card.touch-hover .user-actions {
       opacity: 1;
-    }
-
-    .user-card.selected .user-actions {
-      opacity: 1;
+      pointer-events: auto;
     }
 
     .user-action-btn {
@@ -594,7 +595,7 @@
 
     function renderUserList() {
       const container = document.getElementById('userListContainer');
-      
+
       if (!Array.isArray(users)) {
         users = [];
       }
@@ -612,14 +613,14 @@
       }
 
       let html = '<div class="user-list">';
-      
+
       users.forEach(user => {
         const avatarLetter = user.name.charAt(0).toUpperCase();
         const roleLabel = user.role === 'admin' ? '👑 Админ' : '👤 Пользователь';
         const isSelected = user.userId === selectedUserId ? 'selected' : '';
-        
+
         html += `
-          <div class="user-card ${isSelected}" onclick="selectUser('${user.userId}')">
+          <div class="user-card ${isSelected}" onclick="selectUser('${user.userId}')" ontouchstart="handleTouchStart(event, '${user.userId}')" ontouchend="handleTouchEnd(event)">
             <div class="user-avatar">${avatarLetter}</div>
             <div class="user-info">
               <div class="user-name">${escapeHtml(user.name)}</div>
@@ -627,16 +628,28 @@
             </div>
             <div class="user-actions">
               <button class="user-action-btn btn-edit" onclick="event.stopPropagation(); openEditUserModal('${user.userId}')" title="Редактировать">✏️</button>
-              ${user.role !== 'admin' || users.filter(u => u.role === 'admin').length > 1 ? 
-                `<button class="user-action-btn btn-delete" onclick="event.stopPropagation(); deleteUser('${user.userId}')" title="Удалить">🗑️</button>` : 
+              ${user.role !== 'admin' || users.filter(u => u.role === 'admin').length > 1 ?
+                `<button class="user-action-btn btn-delete" onclick="event.stopPropagation(); deleteUser('${user.userId}')" title="Удалить">🗑️</button>` :
                 ''}
             </div>
           </div>
         `;
       });
-      
+
       html += '</div>';
       container.innerHTML = html;
+    }
+
+    function handleTouchStart(event, userId) {
+      const card = event.currentTarget;
+      card.classList.add('touch-hover');
+    }
+
+    function handleTouchEnd(event) {
+      const card = event.currentTarget;
+      setTimeout(() => {
+        card.classList.remove('touch-hover');
+      }, 200);
     }
 
     function selectUser(userId) {
