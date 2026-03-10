@@ -279,15 +279,33 @@
       padding: 16px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.08);
       cursor: grab;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
       border-left: 4px solid #667eea;
     }
-    
+
     .task-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    
+
+    /* Анимации */
+    @keyframes cardArrive {
+      0% { opacity: 0; transform: translateY(-18px) scale(0.96); }
+      60% { opacity: 1; transform: translateY(4px) scale(1.01); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .task-card.just-arrived {
+      animation: cardArrive 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes syncPulse {
+      0%, 100% { box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 0 0 0 rgba(74,144,217,0.4); }
+      50% { box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 0 0 6px rgba(74,144,217,0); }
+    }
+
+    .task-card.syncing { animation: syncPulse 1.2s ease-in-out infinite; }
+
     .task-card.todo { border-left-color: #ff9800; }
     .task-card.in-progress { border-left-color: #2196f3; }
     .task-card.done { border-left-color: #4caf50; }
@@ -1129,6 +1147,7 @@
     let currentUserId = null;
     let users = [];
     let sortState = { 'todo': null, 'in-progress': null, 'done': null };
+    let pendingTaskIds = new Set();
     const AUTO_REFRESH_SECONDS = 30;
     let autoRefreshInterval = null;
 
@@ -1385,8 +1404,42 @@
         newStatus = task.status === 'done' ? 'in-progress' : 'todo';
       }
 
-      await updateTaskStatus(taskId, newStatus);
-      await loadTasks();
+      // Оптимистичное обновление — сразу обновляем UI
+      task.status = newStatus;
+      pendingTaskIds.add(taskId);
+
+      // Удаляем старую карточку
+      const oldCard = document.querySelector(`.task-card[data-id="${taskId}"]`);
+      if (oldCard) oldCard.remove();
+
+      // Рендерим новую карточку с анимацией
+      renderTask(task, true);
+
+      // Добавляем класс синхронизации
+      const newCard = document.querySelector(`.task-card[data-id="${taskId}"]`);
+      if (newCard) {
+        newCard.classList.add('syncing');
+        newCard.classList.add('just-arrived');
+        newCard.querySelectorAll('button').forEach(b => b.disabled = true);
+      }
+
+      try {
+        // Отправляем на сервер
+        await apiJsonp('updateStatus', { id: taskId, status: newStatus });
+
+        // Убираем классы
+        pendingTaskIds.delete(taskId);
+        const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
+        if (card) {
+          card.classList.remove('syncing');
+          card.classList.remove('just-arrived');
+          card.querySelectorAll('button').forEach(b => b.disabled = false);
+        }
+      } catch (err) {
+        pendingTaskIds.delete(taskId);
+        alert('Ошибка при перемещении: ' + err.message);
+        await loadTasks();
+      }
     }
 
     // ===== Drag and Drop =====
@@ -1411,8 +1464,37 @@
       if (draggedTaskId && newStatus) {
         const task = tasks.find(t => t.id === draggedTaskId);
         if (task && task.status !== newStatus) {
-          await updateTaskStatus(draggedTaskId, newStatus);
-          await loadTasks();
+          // Оптимистичное обновление
+          task.status = newStatus;
+          pendingTaskIds.add(draggedTaskId);
+
+          const oldCard = document.querySelector(`.task-card[data-id="${draggedTaskId}"]`);
+          if (oldCard) oldCard.remove();
+
+          renderTask(task, true);
+
+          const newCard = document.querySelector(`.task-card[data-id="${draggedTaskId}"]`);
+          if (newCard) {
+            newCard.classList.add('syncing');
+            newCard.classList.add('just-arrived');
+            newCard.querySelectorAll('button').forEach(b => b.disabled = true);
+          }
+
+          try {
+            await apiJsonp('updateStatus', { id: draggedTaskId, status: newStatus });
+
+            pendingTaskIds.delete(draggedTaskId);
+            const card = document.querySelector(`.task-card[data-id="${draggedTaskId}"]`);
+            if (card) {
+              card.classList.remove('syncing');
+              card.classList.remove('just-arrived');
+              card.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+          } catch (err) {
+            pendingTaskIds.delete(draggedTaskId);
+            alert('Ошибка при перемещении: ' + err.message);
+            await loadTasks();
+          }
         }
       }
       draggedTaskId = null;
