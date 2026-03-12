@@ -17,6 +17,35 @@ function checkUpdates() {
 }
 
 // ============================================================================
+// Циклические задачи - Утилиты
+// ============================================================================
+
+function calculateNextDate(currentDate, interval, type) {
+  const date = new Date(currentDate);
+  const intInterval = parseInt(interval);
+  
+  switch(type) {
+    case 'days':
+      date.setDate(date.getDate() + intInterval);
+      break;
+    case 'weeks':
+      date.setDate(date.getDate() + (intInterval * 7));
+      break;
+    case 'months':
+      date.setMonth(date.getMonth() + intInterval);
+      break;
+    case 'years':
+      date.setFullYear(date.getFullYear() + intInterval);
+      break;
+  }
+  
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+}
+
+// ============================================================================
 // Утилиты
 // ============================================================================
 
@@ -191,14 +220,23 @@ function getTasksData(userId) {
     const sheet = getTasksSheet();
     const data = sheet.getDataRange().getValues();
     const headers = data.shift();
+    const today = formatDateForJS(new Date());
 
     return data
       .filter(row => {
+        // Скрываем будущие циклические задачи (NextDueDate > today)
+        const nextDueDate = row[10] || '';
+        const isRecurring = row[11] === 'TRUE';
+        
+        if (isRecurring && nextDueDate && nextDueDate > today) {
+          return false;
+        }
+        
         // Если пользователь не админ — фильтруем по AssignedTo
         if (userId && userId !== 'admin') {
-          return row[7] === userId; // колонка H (AssignedTo)
+          return row[7] === userId;
         }
-        return row[0] || row[1]; // Показываем строки с ID или Заданием
+        return row[0] || row[1];
       })
       .map(row => ({
         id: row[0] || generateId(),
@@ -208,7 +246,11 @@ function getTasksData(userId) {
         endDate: row[4] ? formatDateForJS(row[4]) : '',
         duration: row[5] || '',
         plannedDate: row[6] ? formatDateForJS(row[6]) : '',
-        assignedTo: row[7] || null
+        assignedTo: row[7] || null,
+        recurrenceInterval: row[8] || '',
+        recurrenceType: row[9] || '',
+        nextDueDate: row[10] || '',
+        isRecurring: row[11] === 'TRUE'
       }));
   } catch (e) {
     Logger.log('getTasksData error: ' + e.message);
@@ -220,11 +262,15 @@ function getTasks(userId) {
   return getTasksData(userId);
 }
 
-function addTask(title, plannedDate, assignedTo) {
+function addTask(title, plannedDate, assignedTo, recurrence) {
   const lock = getLock();
   lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
   try {
     const sheet = getTasksSheet();
+    
+    // recurrence = { interval: 4, type: 'months', nextDueDate: '2026-07-01' }
+    const isRecurring = recurrence && recurrence.interval && recurrence.type && recurrence.nextDueDate;
+    
     const task = {
       id: generateId(),
       title: title,
@@ -233,9 +279,13 @@ function addTask(title, plannedDate, assignedTo) {
       endDate: '',
       duration: '',
       plannedDate: plannedDate || '',
-      assignedTo: assignedTo || null
+      assignedTo: assignedTo || null,
+      recurrenceInterval: isRecurring ? recurrence.interval : '',
+      recurrenceType: isRecurring ? recurrence.type : '',
+      nextDueDate: isRecurring ? recurrence.nextDueDate : '',
+      isRecurring: isRecurring ? 'TRUE' : ''
     };
-    
+
     sheet.appendRow([
       task.id,
       task.title,
@@ -244,12 +294,16 @@ function addTask(title, plannedDate, assignedTo) {
       task.endDate,
       task.duration,
       task.plannedDate,
-      task.assignedTo
+      task.assignedTo,
+      task.recurrenceInterval,
+      task.recurrenceType,
+      task.nextDueDate,
+      task.isRecurring
     ]);
-    
+
     return {
       ok: true,
-      data: getTasksData(assignedTo) // Возвращаем задачи для этого пользователя
+      data: getTasksData(assignedTo)
     };
   } finally {
     lock.releaseLock();
@@ -313,10 +367,6 @@ function updateTask(taskId, updates) {
 }
 
 function updateTaskStatus(taskId, newStatus) {
-  return updateTask(taskId, { status: newStatus });
-}
-
-function deleteTask(taskId) {
   const lock = getLock();
   lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
   try {
@@ -325,11 +375,159 @@ function deleteTask(taskId) {
     
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === taskId) {
+        const row = i + 1;
+        const isRecurring = data[i][11] === 'TRUE';
+        
+        if (newStatus === 'done') {
+          sheet.getRange(row, 3).setValue('done');
+          
+          const endDate = new Date();
+          sheet.getRange(row, 5).setValue(endDate);
+          
+          const startDate = data[i][3] ? new Date(data[i][3]) : new Date();
+          const diffTime = Math.abs(new Date() - startDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          sheet.getRange(row, 6).setValue(diffDays + ' дн.');
+          
+          // Если циклическая → создать следующую задачу
+          if (isRecurring) {
+            const interval = data[i][8];
+            const type = data[i][9];
+            const nextDueDate = data[i][10];
+            const assignedTo = data[i][7];
+            const title = data[i][1];
+            
+            const newNextDate = calculateNextDate(nextDueDate, interval, type);
+            
+            // Создаём новую задачу
+            addTask(title, '', assignedTo, {
+              interval: interval,
+              type: type,
+              nextDueDate: newNextDate
+            });
+          }
+        } else {
+          sheet.getRange(row, 3).setValue(newStatus);
+        }
+        
+        return { ok: true, data: getTasksData(null) };
+      }
+    }
+    
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteTask(taskId) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
         sheet.deleteRow(i + 1);
         return { ok: true };
       }
     }
+
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ============================================================================
+// Циклические задачи - API
+// ============================================================================
+
+function getRecurringTasks() {
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data.shift();
     
+    return data
+      .filter(row => row[11] === 'TRUE')
+      .map(row => ({
+        id: row[0] || generateId(),
+        title: row[1] || '',
+        status: row[2] || 'todo',
+        startDate: row[3] ? formatDateForJS(row[3]) : '',
+        endDate: row[4] ? formatDateForJS(row[4]) : '',
+        duration: row[5] || '',
+        plannedDate: row[6] ? formatDateForJS(row[6]) : '',
+        assignedTo: row[7] || null,
+        recurrenceInterval: row[8] || '',
+        recurrenceType: row[9] || '',
+        nextDueDate: row[10] || '',
+        isRecurring: true
+      }));
+  } catch (e) {
+    Logger.log('getRecurringTasks error: ' + e.message);
+    return [];
+  }
+}
+
+function updateRecurringTask(taskId, updates) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
+        const row = i + 1;
+
+        if (updates.title !== undefined) {
+          sheet.getRange(row, 2).setValue(updates.title);
+        }
+        if (updates.recurrenceInterval !== undefined) {
+          sheet.getRange(row, 9).setValue(updates.recurrenceInterval);
+        }
+        if (updates.recurrenceType !== undefined) {
+          sheet.getRange(row, 10).setValue(updates.recurrenceType);
+        }
+        if (updates.nextDueDate !== undefined) {
+          sheet.getRange(row, 11).setValue(updates.nextDueDate);
+        }
+        if (updates.assignedTo !== undefined) {
+          sheet.getRange(row, 8).setValue(updates.assignedTo);
+        }
+
+        return { ok: true, data: getRecurringTasks() };
+      }
+    }
+
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function removeRecurring(taskId) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
+        const row = i + 1;
+        sheet.getRange(row, 9).clearContent();
+        sheet.getRange(row, 10).clearContent();
+        sheet.getRange(row, 11).clearContent();
+        sheet.getRange(row, 12).clearContent();
+
+        return { ok: true };
+      }
+    }
+
     return { ok: false, error: 'Задача не найдена' };
   } finally {
     lock.releaseLock();
@@ -388,6 +586,18 @@ function doGet(e) {
       } else if (action === 'deleteUser') {
         const uid = e.parameter.userId || '';
         result = deleteUser(uid);
+      } else if (action === 'getRecurringTasks') {
+        result = getRecurringTasks();
+      } else if (action === 'updateRecurringTask') {
+        result = updateRecurringTask(e.parameter.id, {
+          title: e.parameter.title || '',
+          assignedTo: e.parameter.assignedTo || '',
+          recurrenceInterval: e.parameter.recurrenceInterval || '',
+          recurrenceType: e.parameter.recurrenceType || '',
+          nextDueDate: e.parameter.nextDueDate || ''
+        });
+      } else if (action === 'removeRecurring') {
+        result = removeRecurring(e.parameter.id);
       } else {
         result = { ok: false, error: 'Unknown action' };
       }
@@ -506,11 +716,26 @@ function doPost(e) {
           const updTelegramId = payload.telegramId;
           const updRole = payload.role;
           return jsonResponse(updateUser(updUserId, updName, updTelegramId, updRole));
-          
+
         case 'deleteUser':
           const delUserId = payload.userId;
           return jsonResponse(deleteUser(delUserId));
-          
+
+        case 'getRecurringTasks':
+          return jsonResponse(getRecurringTasks());
+
+        case 'updateRecurringTask':
+          return jsonResponse(updateRecurringTask(payload.id, {
+            title: payload.title,
+            assignedTo: payload.assignedTo,
+            recurrenceInterval: payload.recurrenceInterval,
+            recurrenceType: payload.recurrenceType,
+            nextDueDate: payload.nextDueDate
+          }));
+
+        case 'removeRecurring':
+          return jsonResponse(removeRecurring(payload.id));
+
         default:
           return jsonResponse({ ok: false, error: 'Unknown action' });
       }

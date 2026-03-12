@@ -813,6 +813,80 @@
       display: none;
     }
 
+    /* Recurring Tasks View */
+    .recurring-view {
+      display: none;
+    }
+
+    .recurring-view:not(.hidden) {
+      display: block;
+    }
+
+    .recurring-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .recurring-table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .recurring-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .recurring-table th {
+      background: #f5f7fa;
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #e1e5eb;
+    }
+
+    .recurring-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #555;
+    }
+
+    .recurring-table tr:hover {
+      background: #f9fafb;
+    }
+
+    .recurring-table .action-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 6px;
+      transition: all 0.2s;
+    }
+
+    .recurring-table .btn-edit {
+      background: #f5f7fa;
+      color: #667eea;
+    }
+
+    .recurring-table .btn-delete {
+      background: #fee;
+      color: #dc3545;
+    }
+
+    .recurring-table .action-btn:hover {
+      transform: scale(1.05);
+    }
+
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
       /* Header wraps vertically */
@@ -838,6 +912,22 @@
 
       .column {
         min-height: 300px;
+      }
+
+      /* Recurring table scrolls horizontally */
+      .recurring-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .recurring-header h2 {
+        font-size: 18px;
+      }
+
+      .recurring-table th,
+      .recurring-table td {
+        padding: 10px 12px;
+        font-size: 14px;
       }
 
       /* Table scrolls horizontally */
@@ -955,6 +1045,7 @@
         <div class="view-toggle">
           <button id="viewTableBtn" class="active" onclick="setView('table')">📊 Таблица</button>
           <button id="viewBoardBtn" onclick="setView('board')">📋 Доска</button>
+          <button id="viewRecurringBtn" onclick="setView('recurring')">🔄 Циклические</button>
         </div>
         <a href="select_user.html" class="btn btn-secondary">👤 Выбор пользователя</a>
         <button class="btn btn-primary" onclick="openAddTaskModal()">➕ Добавить задачу</button>
@@ -978,6 +1069,33 @@
       <div class="stat-card">
         <div class="stat-value" id="statDone">0</div>
         <div class="stat-label">Готово</div>
+      </div>
+    </div>
+
+    <!-- Recurring Tasks View -->
+    <div id="recurringView" class="recurring-view hidden">
+      <div class="card">
+        <div class="recurring-header">
+          <h2>🔄 Циклические задачи</h2>
+          <button class="btn btn-primary" onclick="openAddRecurringModal()">➕ Добавить циклическую</button>
+        </div>
+        
+        <div class="recurring-table-wrapper">
+          <table class="recurring-table">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Период</th>
+                <th>След. дата</th>
+                <th>Исполнитель</th>
+                <th>Действия</th>
+              </tr>
+            </thead>
+            <tbody id="recurringTasksBody">
+              <tr><td colspan="5" style="text-align:center;padding:40px;color:#888;">📭 Нет циклических задач</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1120,6 +1238,50 @@
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" onclick="closeTaskModal()">Отмена</button>
         <button class="modal-btn modal-btn-save" onclick="saveTask()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recurring Task Modal -->
+  <div class="modal-overlay" id="recurringModal">
+    <div class="modal-content">
+      <div class="modal-title" id="recurringModalTitle">Новая циклическая задача</div>
+      
+      <div class="form-group">
+        <label for="recurringTitle">Название задачи *</label>
+        <input type="text" id="recurringTitle" placeholder="Например: Показания счетчика" />
+      </div>
+      
+      <div class="form-group">
+        <label for="recurringAssignee">👤 Исполнитель *</label>
+        <select id="recurringAssignee">
+          <option value="">Выберите исполнителя...</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>🔄 Период повторения *</label>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <span>Каждые</span>
+          <input type="number" id="recurringInterval" min="1" max="12" value="1" 
+               style="width:60px;padding:8px;border:2px solid #e1e5eb;border-radius:8px;" />
+          <select id="recurringType" style="flex:1;padding:8px;border:2px solid #e1e5eb;border-radius:8px;">
+            <option value="days">дней</option>
+            <option value="weeks">недель</option>
+            <option value="months" selected>месяцев</option>
+            <option value="years">лет</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="recurringNextDate">📅 Первое выполнение *</label>
+        <input type="date" id="recurringNextDate" />
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" onclick="closeRecurringModal()">Отмена</button>
+        <button class="modal-btn modal-btn-save" onclick="saveRecurringTask()">Сохранить</button>
       </div>
     </div>
   </div>
@@ -1556,23 +1718,35 @@
 
       const boardView = document.getElementById('boardView');
       const tableView = document.getElementById('tableView');
+      const recurringView = document.getElementById('recurringView');
       const viewTableBtn = document.getElementById('viewTableBtn');
       const viewBoardBtn = document.getElementById('viewBoardBtn');
+      const viewRecurringBtn = document.getElementById('viewRecurringBtn');
 
+      // Скрыть все
+      if (boardView) boardView.classList.remove('active');
+      if (tableView) tableView.classList.add('hidden');
+      if (recurringView) recurringView.classList.add('hidden');
+
+      // Убрать active у кнопок
+      if (viewTableBtn) viewTableBtn.classList.remove('active');
+      if (viewBoardBtn) viewBoardBtn.classList.remove('active');
+      if (viewRecurringBtn) viewRecurringBtn.classList.remove('active');
+
+      // Показать выбранное
       if (view === 'board') {
         boardView.classList.add('active');
-        tableView.classList.add('hidden');
-        viewBoardBtn.classList.add('active');
-        viewTableBtn.classList.remove('active');
+        if (viewBoardBtn) viewBoardBtn.classList.add('active');
         populateBoardFilters();
-        // Используем filteredTasks если есть, иначе tasks
         const data = filteredTasks.length ? filteredTasks : tasks;
         renderBoardViewWithData(data);
+      } else if (view === 'recurring') {
+        recurringView.classList.remove('hidden');
+        if (viewRecurringBtn) viewRecurringBtn.classList.add('active');
+        loadRecurringTasks();
       } else {
-        boardView.classList.remove('active');
         tableView.classList.remove('hidden');
-        viewTableBtn.classList.add('active');
-        viewBoardBtn.classList.remove('active');
+        if (viewTableBtn) viewTableBtn.classList.add('active');
       }
     }
 
@@ -2304,6 +2478,160 @@
     async function init() {
       await loadData();
       loadSavedView();
+    }
+
+    // ===== Recurring Tasks =====
+    let recurringTasks = [];
+    let editingRecurringId = null;
+
+    async function loadRecurringTasks() {
+      try {
+        const result = await apiJsonp('getRecurringTasks');
+        recurringTasks = Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
+        renderRecurringTasks();
+      } catch (e) {
+        console.error('loadRecurringTasks error:', e);
+      }
+    }
+
+    function renderRecurringTasks() {
+      const tbody = document.getElementById('recurringTasksBody');
+      if (!tbody) return;
+
+      if (recurringTasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#888;">📭 Нет циклических задач</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = recurringTasks.map(task => {
+        const assignee = users.find(u => u.userId === task.assignedTo);
+        const periodText = formatPeriod(task.recurrenceInterval, task.recurrenceType);
+        const nextDate = formatDateWithDay(task.nextDueDate);
+
+        return `
+          <tr>
+            <td>${escapeHtml(task.title)}</td>
+            <td>🔄 ${periodText}</td>
+            <td>📅 ${nextDate}</td>
+            <td>👤 ${assignee ? assignee.name : 'Не назначен'}</td>
+            <td>
+              <button class="action-btn btn-edit" onclick="openEditRecurringModal('${task.id}')" title="Редактировать">✏️</button>
+              <button class="action-btn btn-delete" onclick="removeRecurringTask('${task.id}')" title="Удалить цикличность">✕</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function formatPeriod(interval, type) {
+      const types = {
+        'days': 'дн.',
+        'weeks': 'нед.',
+        'months': 'мес.',
+        'years': 'лет'
+      };
+
+      const n = parseInt(interval);
+      const text = types[type] || type;
+
+      if (n === 1) {
+        return `Каждый ${text === 'лет' ? 'год' : text === 'мес.' ? 'месяц' : text === 'нед.' ? 'месяц' : 'день'}`;
+      }
+
+      return `Каждые ${n} ${text}`;
+    }
+
+    function openAddRecurringModal() {
+      editingRecurringId = null;
+      document.getElementById('recurringModalTitle').textContent = 'Новая циклическая задача';
+      document.getElementById('recurringTitle').value = '';
+      document.getElementById('recurringAssignee').value = '';
+      document.getElementById('recurringInterval').value = '1';
+      document.getElementById('recurringType').value = 'months';
+      document.getElementById('recurringNextDate').value = getTodayStr();
+
+      // Заполнить исполнителей
+      const select = document.getElementById('recurringAssignee');
+      select.innerHTML = '<option value="">Выберите исполнителя...</option>' +
+        users.map(u => `<option value="${u.userId}">${u.name}</option>`).join('');
+
+      document.getElementById('recurringModal').classList.add('show');
+    }
+
+    function openEditRecurringModal(taskId) {
+      editingRecurringId = taskId;
+      const task = recurringTasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      document.getElementById('recurringModalTitle').textContent = 'Редактирование циклической задачи';
+      document.getElementById('recurringTitle').value = task.title;
+      document.getElementById('recurringAssignee').value = task.assignedTo;
+      document.getElementById('recurringInterval').value = task.recurrenceInterval;
+      document.getElementById('recurringType').value = task.recurrenceType;
+      document.getElementById('recurringNextDate').value = task.nextDueDate;
+
+      // Заполнить исполнителей
+      const select = document.getElementById('recurringAssignee');
+      select.innerHTML = '<option value="">Выберите исполнителя...</option>' +
+        users.map(u => `<option value="${u.userId}">${u.name}</option>`).join('');
+
+      document.getElementById('recurringModal').classList.add('show');
+    }
+
+    function closeRecurringModal() {
+      document.getElementById('recurringModal').classList.remove('show');
+      editingRecurringId = null;
+    }
+
+    async function saveRecurringTask() {
+      const title = document.getElementById('recurringTitle').value.trim();
+      const assignedTo = document.getElementById('recurringAssignee').value;
+      const interval = document.getElementById('recurringInterval').value;
+      const type = document.getElementById('recurringType').value;
+      const nextDate = document.getElementById('recurringNextDate').value;
+
+      if (!title) { alert('Введите название задачи'); return; }
+      if (!assignedTo) { alert('Выберите исполнителя'); return; }
+      if (!interval || interval < 1) { alert('Укажите период'); return; }
+      if (!nextDate) { alert('Укажите дату'); return; }
+
+      try {
+        if (editingRecurringId) {
+          await apiJsonp('updateRecurringTask', {
+            id: editingRecurringId,
+            title: title,
+            assignedTo: assignedTo,
+            recurrenceInterval: interval,
+            recurrenceType: type,
+            nextDueDate: nextDate
+          });
+        } else {
+          await apiJsonp('addTask', {
+            title: title,
+            assignedTo: assignedTo,
+            recurrenceInterval: interval,
+            recurrenceType: type,
+            nextDueDate: nextDate,
+            isRecurring: true
+          });
+        }
+
+        closeRecurringModal();
+        loadRecurringTasks();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
+    }
+
+    async function removeRecurringTask(taskId) {
+      if (!confirm('Удалить цикличность? Задача останется, но не будет повторяться.')) return;
+
+      try {
+        await apiJsonp('removeRecurring', { id: taskId });
+        loadRecurringTasks();
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
+      }
     }
 
     init();
