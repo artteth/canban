@@ -2488,6 +2488,8 @@
       try {
         const result = await apiJsonp('getRecurringTasks');
         recurringTasks = Array.isArray(result) ? result : (result.ok ? (result.data || []) : []);
+        console.log('Recurring tasks loaded:', recurringTasks);
+        recurringTasks.forEach(t => console.log('Task:', t.title, 'nextDueDate:', t.nextDueDate));
         renderRecurringTasks();
       } catch (e) {
         console.error('loadRecurringTasks error:', e);

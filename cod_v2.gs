@@ -518,29 +518,39 @@ function getRecurringTasks() {
     const headers = data.shift();
     
     Logger.log('getRecurringTasks: total rows=' + data.length);
-    Logger.log('getRecurringTasks: checking for IsRecurring in column 11');
-
+    
     return data
       .filter(row => {
         const isRecurring = row[11];
-        Logger.log('Task: ' + row[1] + ', IsRecurring=' + isRecurring + ', type=' + typeof isRecurring);
+        Logger.log('Task: ' + row[1] + ', IsRecurring=' + isRecurring + ', nextDueDate=' + row[10]);
         return isRecurring === 'TRUE' || isRecurring === true || isRecurring === 'true';
       })
-      .map(row => ({
-        id: row[0] || generateId(),
-        title: row[1] || '',
-        status: row[2] || 'todo',
-        startDate: row[3] ? formatDateForJS(row[3]) : '',
-        endDate: row[4] ? formatDateForJS(row[4]) : '',
-        duration: row[5] || '',
-        plannedDate: row[6] ? formatDateForJS(row[6]) : '',
-        assignedTo: row[7] || null,
-        recurrenceInterval: row[8] || '',
-        recurrenceType: row[9] || '',
-        nextDueDate: row[10] || '',
-        isRecurring: true,
-        isPaused: row[12] === 'TRUE' || row[12] === true // Колонка M (13-я)
-      }));
+      .map(row => {
+        let nextDueDate = row[10];
+        // Если дата в формате Date объекта Google, конвертируем
+        if (nextDueDate && typeof nextDueDate === 'object' && nextDueDate instanceof Date) {
+          const y = nextDueDate.getFullYear();
+          const m = String(nextDueDate.getMonth() + 1).padStart(2, '0');
+          const d = String(nextDueDate.getDate()).padStart(2, '0');
+          nextDueDate = y + '-' + m + '-' + d;
+          Logger.log('Converted date: ' + nextDueDate);
+        }
+        return {
+          id: row[0] || generateId(),
+          title: row[1] || '',
+          status: row[2] || 'todo',
+          startDate: row[3] ? formatDateForJS(row[3]) : '',
+          endDate: row[4] ? formatDateForJS(row[4]) : '',
+          duration: row[5] || '',
+          plannedDate: row[6] ? formatDateForJS(row[6]) : '',
+          assignedTo: row[7] || null,
+          recurrenceInterval: row[8] || '',
+          recurrenceType: row[9] || '',
+          nextDueDate: nextDueDate || '',
+          isRecurring: true,
+          isPaused: row[12] === 'TRUE' || row[12] === true
+        };
+      });
   } catch (e) {
     Logger.log('getRecurringTasks error: ' + e.message);
     return [];
