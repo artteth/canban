@@ -45,6 +45,174 @@ function calculateNextDate(currentDate, interval, type) {
   return y + '-' + m + '-' + d;
 }
 
+// ============================================================================
+// Загрузка изображений в Google Drive
+// ============================================================================
+
+function uploadImageToDrive(base64Data, fileName, taskId) {
+  try {
+    // Удаляем префикс data:image/jpeg;base64,
+    var base64String = base64Data.replace(/^data:image\/(jpeg|png|jpg|gif|webp);base64,/, '');
+    
+    // Декодируем Base64 в байты
+    var blob = Utilities.newBlob(Utilities.base64Decode(base64String), 'image/jpeg', fileName);
+    
+    // Получаем или создаём папку для задач
+    var folderName = 'Kanban Tasks Images';
+    var folders = DriveApp.getFoldersByName(folderName);
+    var folder;
+    
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+    
+    // Создаём файл с именем задачи
+    var file = folder.createFile(blob);
+    file.setName(taskId + '_' + fileName);
+    
+    // Делаем файл доступным по ссылке (только для чтения)
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // Получаем ссылку
+    var fileUrl = file.getUrl();
+    var fileId = file.getId();
+    
+    // Для прямого доступа к изображению используем drive.google.com/uc
+    var directUrl = 'https://drive.google.com/uc?id=' + fileId + '&export=view';
+    
+    Logger.log('Image uploaded: ' + fileUrl);
+    
+    return {
+      ok: true,
+      data: {
+        fileId: fileId,
+        fileUrl: fileUrl,
+        directUrl: directUrl,
+        fileName: fileName
+      }
+    };
+  } catch (e) {
+    Logger.log('uploadImageToDrive error: ' + e.message);
+    return {
+      ok: false,
+      error: e.message
+    };
+  }
+}
+
+function addImageToTask(taskId, imageUrl, imageName) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
+        const row = i + 1;
+        
+        // Получаем текущие вложения (колонка N = 14)
+        var attachments = sheet.getRange(row, 14).getValue();
+        var attachmentsArray = [];
+        
+        if (attachments && typeof attachments === 'string') {
+          try {
+            attachmentsArray = JSON.parse(attachments);
+          } catch (e) {
+            attachmentsArray = [];
+          }
+        }
+        
+        // Добавляем новое вложение
+        attachmentsArray.push({
+          type: 'image',
+          url: imageUrl,
+          name: imageName || 'image.jpg',
+          uploadedAt: new Date().toISOString()
+        });
+        
+        // Сохраняем обратно в таблицу
+        sheet.getRange(row, 14).setValue(JSON.stringify(attachmentsArray));
+        
+        return {
+          ok: true,
+          data: attachmentsArray
+        };
+      }
+    }
+    
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getTaskAttachments(taskId) {
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
+        var attachments = data[i][13]; // Колонка N
+        if (attachments && typeof attachments === 'string') {
+          try {
+            return { ok: true, data: JSON.parse(attachments) };
+          } catch (e) {
+            return { ok: true, data: [] };
+          }
+        }
+        return { ok: true, data: [] };
+      }
+    }
+    
+    return { ok: false, error: 'Задача не найдена' };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+function removeImageFromTask(taskId, imageIndex) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === taskId) {
+        const row = i + 1;
+        
+        var attachments = sheet.getRange(row, 14).getValue();
+        var attachmentsArray = [];
+        
+        if (attachments && typeof attachments === 'string') {
+          try {
+            attachmentsArray = JSON.parse(attachments);
+          } catch (e) {
+            return { ok: false, error: 'Неверный формат вложений' };
+          }
+        }
+        
+        // Удаляем вложение по индексу
+        if (imageIndex >= 0 && imageIndex < attachmentsArray.length) {
+          attachmentsArray.splice(imageIndex, 1);
+          sheet.getRange(row, 14).setValue(JSON.stringify(attachmentsArray));
+          return { ok: true, data: attachmentsArray };
+        }
+        
+        return { ok: false, error: 'Вложение не найдено' };
+      }
+    }
+    
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 // Поставить циклическую задачу на паузу
 function pauseRecurringTask(taskId) {
   const lock = getLock();
@@ -694,6 +862,13 @@ function doGet(e) {
         result = pauseRecurringTask(e.parameter.id);
       } else if (action === 'resumeRecurringTask') {
         result = resumeRecurringTask(e.parameter.id);
+      } else if (action === 'uploadImageToDrive') {
+        // Для загрузки изображений используем POST
+        result = { ok: false, error: 'Use POST method' };
+      } else if (action === 'getTaskAttachments') {
+        result = getTaskAttachments(e.parameter.id);
+      } else if (action === 'removeImageFromTask') {
+        result = removeImageFromTask(e.parameter.id, e.parameter.index);
       } else {
         result = { ok: false, error: 'Unknown action' };
       }
@@ -844,6 +1019,22 @@ function doPost(e) {
 
         case 'resumeRecurringTask':
           return jsonResponse(resumeRecurringTask(payload.id));
+
+        case 'uploadImageToDrive':
+          // Загрузка изображения в Drive
+          return jsonResponse(uploadImageToDrive(payload.base64Data, payload.fileName, payload.taskId));
+
+        case 'addImageToTask':
+          // Добавление ссылки на изображение в задачу
+          return jsonResponse(addImageToTask(payload.taskId, payload.imageUrl, payload.imageName));
+
+        case 'getTaskAttachments':
+          // Получить вложения задачи
+          return jsonResponse(getTaskAttachments(payload.id));
+
+        case 'removeImageFromTask':
+          // Удалить вложение
+          return jsonResponse(removeImageFromTask(payload.id, payload.index));
 
         default:
           return jsonResponse({ ok: false, error: 'Unknown action' });
