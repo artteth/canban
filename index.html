@@ -1721,12 +1721,22 @@
         return;
       }
 
+      const submitBtn = document.querySelector('#addTaskModal .modal-btn-add');
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.textContent = '⏳ Сохранение...';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.7';
+
       try {
         await addTask(title, plannedDate, assignedTo);
         closeAddTaskModal();
         await loadTasks();
       } catch (e) {
         alert('Ошибка при добавлении задачи: ' + e.message);
+      } finally {
+        submitBtn.textContent = originalBtnText;
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
       }
     }
 

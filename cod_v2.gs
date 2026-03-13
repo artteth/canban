@@ -13,18 +13,245 @@ const TELEGRAM_BOT_TOKEN = '8664566561:AAEV11uRMZIxmqjcoQybafCWAmQhdoQdbXs';
 // ============================================================================
 
 function checkUpdates() {
-  // Пустая функция для триггера по времени
+  // Обрабатываем циклические задачи по расписанию
+  processRecurringTasks();
+}
+
+// ============================================================================
+// Настройка триггера (вызвать один раз вручную)
+// ============================================================================
+
+// Установить триггер на каждый день в полночь
+function setupDailyTrigger() {
+  // Удаляем существующие триггеры
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'checkUpdates') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+  
+  // Создаем новый триггер на каждый день в полночь
+  ScriptApp.newTrigger('checkUpdates')
+    .timeBased()
+    .atHour(0)  // в 00:00
+    .everyDays(1)
+    .create();
+  
+  Logger.log('Триггер установлен: checkUpdates будет выполняться ежедневно в полночь');
+  return { ok: true, message: 'Триггер установлен на ежедневное выполнение в полночь' };
+}
+
+// Установить триггер на каждую минуту
+function setupTestTriggerEveryMinute() {
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'checkUpdates') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+  
+  ScriptApp.newTrigger('checkUpdates')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+  
+  Logger.log('Триггер установлен: checkUpdates будет выполняться каждую минуту');
+  return { ok: true, message: 'Триггер установлен на каждую минуту' };
+}
+
+// Установить триггер на каждые 5 минут
+function setupTestTriggerEvery5Minutes() {
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'checkUpdates') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+  
+  ScriptApp.newTrigger('checkUpdates')
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+  
+  Logger.log('Триггер установлен: checkUpdates будет выполняться каждые 5 минут');
+  return { ok: true, message: 'Триггер установлен на каждые 5 минут' };
+}
+
+// Удалить все триггеры
+function deleteAllTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let deletedCount = 0;
+  for (let trigger of triggers) {
+    ScriptApp.deleteTrigger(trigger);
+    deletedCount++;
+  }
+  Logger.log('Удалено триггеров: ' + deletedCount);
+  return { ok: true, deleted: deletedCount };
 }
 
 // ============================================================================
 // Циклические задачи - Утилиты
 // ============================================================================
 
+// Основная функция для создания задач по расписанию (вызывается триггером)
+function processRecurringTasks() {
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data.shift();
+    const now = new Date();
+    const nowStr = formatDateForJS(now);
+    const nowTime = now.toTimeString().slice(0, 5); // HH:MM
+    
+    Logger.log('=== processRecurringTasks started ===');
+    Logger.log('Current time: ' + nowStr + ' ' + nowTime);
+    Logger.log('Total rows: ' + data.length);
+    
+    let createdCount = 0;
+    
+    // Начинаем с i = 0 (первая строка данных после заголовков)
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const taskId = row[0];
+      const title = row[1] || 'Untitled';
+      const isRecurring = String(row[11]).toUpperCase();
+      const isPaused = String(row[12]).toUpperCase();
+      
+      Logger.log('Row ' + (i+2) + ': "' + title + '" isRecurring="' + isRecurring + '" isPaused="' + isPaused + '"');
+      
+      // Пропускаем нециклические задачи
+      if (isRecurring !== 'TRUE') {
+        Logger.log('  -> Skipping: not recurring (isRecurring=' + isRecurring + ')');
+        continue;
+      }
+      
+      // Пропускаем приостановленные
+      if (isPaused === 'TRUE') {
+        Logger.log('  -> Skipping: paused');
+        continue;
+      }
+      
+      let nextDueDate = row[10];
+      Logger.log('  -> nextDueDate raw: ' + nextDueDate);
+      
+      // Пропускаем если нет даты
+      if (!nextDueDate) {
+        Logger.log('  -> Skipping: no nextDueDate');
+        continue;
+      }
+      
+      // Считываем СВЕЖЕЕ значение даты прямо из таблицы (строка i+2, столбец 11 = K)
+      const freshRow = sheet.getRange(i + 2, 1, 1, 12).getValues()[0];
+      const freshNextDueDate = freshRow[10];
+      
+      if (!freshNextDueDate) {
+        Logger.log('  -> Skipping: no fresh nextDueDate');
+        continue;
+      }
+      
+      // Используем дату напрямую - Google Sheets возвращает Date объект
+      // Если это не Date, пробуем преобразовать
+      let dueDate;
+      if (freshNextDueDate instanceof Date) {
+        dueDate = freshNextDueDate;
+      } else {
+        dueDate = new Date(freshNextDueDate);
+      }
+      
+      Logger.log('  -> Fresh dueDate: ' + dueDate.toString());
+      Logger.log('  -> now: ' + now.toString());
+      Logger.log('  -> dueDate <= now: ' + (dueDate <= now));
+      
+      if (dueDate <= now) {
+        const assignedTo = row[7];
+        const interval = row[8];
+        const type = row[9];
+        
+        Logger.log('  -> interval=' + interval + ' type=' + type);
+        Logger.log('  -> Creating new task instance!');
+        
+        // Создаем новую задачу-экземпляр
+        addTaskInstance(title, assignedTo, taskId);
+        
+        // Вычисляем следующую дату от актуальной даты из таблицы
+        Logger.log('  -> Calculating next date from fresh dueDate: ' + dueDate.toString());
+        const newNextDate = calculateNextDate(dueDate, interval, type);
+        Logger.log('  -> New next date: ' + newNextDate);
+        
+        // Обновляем nextDueDate у родительской задачи
+        // Записываем в столбец K (11) той же строки
+        const rowNum = i + 2;  // i - индекс в массиве (с 0), +1 для учёта заголовка, +1 для правильной строки
+        sheet.getRange(rowNum, 11).setValue(newNextDate);
+        
+        // Принудительно применяем изменения
+        SpreadsheetApp.flush();
+        
+        createdCount++;
+        Logger.log('  -> Created! Next due: ' + newNextDate);
+      } else {
+        Logger.log('  -> Not yet time to create');
+      }
+    }
+    
+    Logger.log('=== processRecurringTasks finished: created ' + createdCount + ' tasks ===');
+    return { ok: true, created: createdCount };
+  } catch (e) {
+    Logger.log('processRecurringTasks error: ' + e.message);
+    Logger.log(e.stack);
+    return { ok: false, error: e.message };
+  }
+}
+
+// Создает экземпляр задачи (без данных цикла)
+function addTaskInstance(title, assignedTo, parentId) {
+  const sheet = getTasksSheet();
+  
+  sheet.appendRow([
+    generateId(),
+    title,
+    'todo',           // status
+    new Date(),       // startDate
+    '',               // endDate
+    '',               // duration
+    '',               // plannedDate
+    assignedTo || null,
+    '',               // recurrenceInterval - пусто для экземпляра
+    '',               // recurrenceType - пусто для экземпляра
+    '',               // nextDueDate - пусто для экземпляра
+    ''                // isRecurring - пусто для экземпляра
+  ]);
+}
+
 function calculateNextDate(currentDate, interval, type) {
-  const date = new Date(currentDate);
+  let date;
+  
+  // Обрабатываем разные форматы даты
+  if (currentDate instanceof Date) {
+    date = new Date(currentDate);
+  } else if (typeof currentDate === 'string') {
+    // Поддерживаем формат YYYY-MM-DD или YYYY-MM-DDTHH:MM
+    if (currentDate.includes('T')) {
+      date = new Date(currentDate.replace('T', ' '));
+    } else {
+      date = new Date(currentDate);
+    }
+  } else if (typeof currentDate === 'number') {
+    date = new Date(currentDate);
+  } else {
+    // Если дата не определена, используем сегодня
+    date = new Date();
+  }
+  
   const intInterval = parseInt(interval);
   
   switch(type) {
+    case 'minutes':
+      date.setMinutes(date.getMinutes() + intInterval);
+      break;
+    case 'hours':
+      date.setHours(date.getHours() + intInterval);
+      break;
     case 'days':
       date.setDate(date.getDate() + intInterval);
       break;
@@ -39,9 +266,32 @@ function calculateNextDate(currentDate, interval, type) {
       break;
   }
   
+  // Форматируем дату с временем
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
+  const h = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  
+  // Проверяем, было ли время в исходной дате ДО модификации
+  let hasTime = false;
+  let origDate;
+  if (currentDate instanceof Date) {
+    origDate = currentDate;
+  } else if (typeof currentDate === 'string' && currentDate.includes('T')) {
+    hasTime = true;
+  }
+  
+  // Для Date объекта - проверяем исходную дату
+  if (origDate) {
+    const origHours = origDate.getHours();
+    const origMinutes = origDate.getMinutes();
+    hasTime = (origHours !== 0 || origMinutes !== 0);
+  }
+  
+  if (hasTime) {
+    return y + '-' + m + '-' + d + 'T' + h + ':' + min;
+  }
   return y + '-' + m + '-' + d;
 }
 
@@ -300,6 +550,20 @@ function formatDateForJS(dateVal) {
   return String(dateVal);
 }
 
+// Форматирует дату в строку YYYY-MM-DDTHH:MM для сравнения в таблице
+function formatDateForSheets(dateVal) {
+  if (!dateVal) return '';
+  if (dateVal instanceof Date) {
+    const year = dateVal.getFullYear();
+    const month = String(dateVal.getMonth() + 1).padStart(2, '0');
+    const day = String(dateVal.getDate()).padStart(2, '0');
+    const hours = String(dateVal.getHours()).padStart(2, '0');
+    const minutes = String(dateVal.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+  }
+  return String(dateVal);
+}
+
 // ============================================================================
 // Работа с листами
 // ============================================================================
@@ -434,15 +698,13 @@ function getTasksData(userId) {
     const sheet = getTasksSheet();
     const data = sheet.getDataRange().getValues();
     const headers = data.shift();
-    const today = formatDateForJS(new Date());
 
     return data
       .filter(row => {
-        // Скрываем будущие циклические задачи (NextDueDate > today)
-        const nextDueDate = row[10] || '';
-        const isRecurring = row[11] === 'TRUE';
-        
-        if (isRecurring && nextDueDate && nextDueDate > today) {
+        // Скрываем родительские циклические задачи из доски и таблицы
+        // Они доступны только во вкладке "Циклические"
+        const isRecurring = String(row[11] || '').toUpperCase();
+        if (isRecurring === 'TRUE') {
           return false;
         }
         
@@ -452,20 +714,33 @@ function getTasksData(userId) {
         }
         return row[0] || row[1];
       })
-      .map(row => ({
-        id: row[0] || generateId(),
-        title: row[1] || '',
-        status: row[2] || 'todo',
-        startDate: row[3] ? formatDateForJS(row[3]) : '',
-        endDate: row[4] ? formatDateForJS(row[4]) : '',
-        duration: row[5] || '',
-        plannedDate: row[6] ? formatDateForJS(row[6]) : '',
-        assignedTo: row[7] || null,
-        recurrenceInterval: row[8] || '',
-        recurrenceType: row[9] || '',
-        nextDueDate: row[10] || '',
-        isRecurring: row[11] === 'TRUE'
-      }));
+      .map(row => {
+        // Конвертируем nextDueDate для корректного отображения
+        let nextDueDate = row[10];
+        if (nextDueDate && typeof nextDueDate === 'object' && nextDueDate instanceof Date) {
+          const y = nextDueDate.getFullYear();
+          const m = String(nextDueDate.getMonth() + 1).padStart(2, '0');
+          const d = String(nextDueDate.getDate()).padStart(2, '0');
+          nextDueDate = y + '-' + m + '-' + d;
+        } else {
+          nextDueDate = nextDueDate || '';
+        }
+        
+        return {
+          id: row[0] || generateId(),
+          title: row[1] || '',
+          status: row[2] || 'todo',
+          startDate: row[3] ? formatDateForJS(row[3]) : '',
+          endDate: row[4] ? formatDateForJS(row[4]) : '',
+          duration: row[5] || '',
+          plannedDate: row[6] ? formatDateForJS(row[6]) : '',
+          assignedTo: row[7] || null,
+          recurrenceInterval: row[8] || '',
+          recurrenceType: row[9] || '',
+          nextDueDate: nextDueDate,
+          isRecurring: row[11] === 'TRUE'
+        };
+      });
   } catch (e) {
     Logger.log('getTasksData error: ' + e.message);
     return [];
@@ -624,23 +899,9 @@ function updateTaskStatus(taskId, newStatus) {
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           sheet.getRange(row, 6).setValue(diffDays + ' дн.');
           
-          // Если циклическая → создать следующую задачу
-          if (isRecurring) {
-            const interval = data[i][8];
-            const type = data[i][9];
-            const nextDueDate = data[i][10];
-            const assignedTo = data[i][7];
-            const title = data[i][1];
-            
-            const newNextDate = calculateNextDate(nextDueDate, interval, type);
-            
-            // Создаём новую задачу
-            addTask(title, '', assignedTo, {
-              interval: interval,
-              type: type,
-              nextDueDate: newNextDate
-            });
-          }
+          // Примечание: создание следующих задач теперь происходит автоматически
+          // через processRecurringTasks() (триггер), поэтому здесь не создаем
+          // новую задачу - это предотвращает дублирование
         } else {
           sheet.getRange(row, 3).setValue(newStatus);
         }
@@ -664,11 +925,51 @@ function deleteTask(taskId) {
 
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === taskId) {
+        // Проверяем, является ли это родительской циклической задачей
+        const isRecurring = data[i][11];
+        if (isRecurring === 'TRUE' || isRecurring === true || isRecurring === 'true') {
+          return { ok: false, error: 'Нельзя удалить циклическую задачу из доски. Используйте вкладку "Циклические".' };
+        }
         sheet.deleteRow(i + 1);
         return { ok: true };
       }
     }
 
+    return { ok: false, error: 'Задача не найдена' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Удаление циклической задачи (для вкладки "Циклические")
+function deleteRecurringTask(taskId) {
+  const lock = getLock();
+  lock.waitLock(LOCK_TIMEOUT_SECONDS * 1000);
+  try {
+    const sheet = getTasksSheet();
+    const data = sheet.getDataRange().getValues();
+
+    Logger.log('deleteRecurringTask: looking for taskId=' + taskId);
+    Logger.log('deleteRecurringTask: total rows=' + data.length);
+
+    for (let i = 1; i < data.length; i++) {
+      const rowId = data[i][0];
+      const isRecurring = String(data[i][11] || '').toUpperCase();
+      Logger.log('Row ' + (i+1) + ': id=' + rowId + ', isRecurring=' + isRecurring);
+      if (String(rowId) === String(taskId)) {
+        Logger.log('Found match at row ' + (i+1) + ', isRecurring=' + isRecurring);
+        if (isRecurring !== 'TRUE') {
+          Logger.log('Not a recurring task, using regular delete');
+          // Use regular delete if not recurring
+          sheet.deleteRow(i + 1);
+          return { ok: true };
+        }
+        sheet.deleteRow(i + 1);
+        return { ok: true };
+      }
+    }
+
+    Logger.log('Task not found');
     return { ok: false, error: 'Задача не найдена' };
   } finally {
     lock.releaseLock();
@@ -689,9 +990,9 @@ function getRecurringTasks() {
     
     return data
       .filter(row => {
-        const isRecurring = row[11];
+        const isRecurring = String(row[11] || '').toUpperCase();
         Logger.log('Task: ' + row[1] + ', IsRecurring=' + isRecurring + ', nextDueDate=' + row[10]);
-        return isRecurring === 'TRUE' || isRecurring === true || isRecurring === 'true';
+        return isRecurring === 'TRUE';
       })
       .map(row => {
         let nextDueDate = row[10];
@@ -832,6 +1133,9 @@ function doGet(e) {
       } else if (action === 'deleteTask') {
         const id = e.parameter.id;
         result = deleteTask(id);
+      } else if (action === 'deleteRecurringTask') {
+        const id = e.parameter.id;
+        result = deleteRecurringTask(id);
       } else if (action === 'addUser') {
         const name = e.parameter.name || '';
         const telegramId = e.parameter.telegramId || '';
@@ -858,6 +1162,12 @@ function doGet(e) {
         });
       } else if (action === 'removeRecurring') {
         result = removeRecurring(e.parameter.id);
+      } else if (action === 'setupTestTriggerEveryMinute') {
+        result = setupTestTriggerEveryMinute();
+      } else if (action === 'setupTestTriggerEvery5Minutes') {
+        result = setupTestTriggerEvery5Minutes();
+      } else if (action === 'deleteAllTriggers') {
+        result = deleteAllTriggers();
       } else if (action === 'pauseRecurringTask') {
         result = pauseRecurringTask(e.parameter.id);
       } else if (action === 'resumeRecurringTask') {
@@ -954,14 +1264,26 @@ function doPost(e) {
           const title = payload.title || '';
           const planned = payload.plannedDate || '';
           const assignedTo = payload.assignedTo || payload.userId || null;
-          // Передаём параметры цикличности
-          const recurrence = {
-            recurrenceInterval: payload.recurrenceInterval || '',
-            recurrenceType: payload.recurrenceType || '',
-            nextDueDate: payload.nextDueDate || '',
-            isRecurring: payload.isRecurring || false
-          };
-          return jsonResponse(addTask(title, planned, assignedTo, recurrence));
+          
+          // Передаём параметры цикличности ТОЛЬКО если они явно указаны
+          let recurrenceInterval = '';
+          let recurrenceType = '';
+          let nextDueDate = '';
+          let isRecurring = '';
+          
+          if (payload.isRecurring && payload.recurrenceInterval && payload.recurrenceType) {
+            recurrenceInterval = payload.recurrenceInterval;
+            recurrenceType = payload.recurrenceType;
+            nextDueDate = payload.nextDueDate || '';
+            isRecurring = 'TRUE';
+          }
+          
+          return jsonResponse(addTask(title, planned, assignedTo, {
+            recurrenceInterval: recurrenceInterval,
+            recurrenceType: recurrenceType,
+            nextDueDate: nextDueDate,
+            isRecurring: isRecurring
+          }));
           
         case 'updateTask':
           const taskId = payload.id;
@@ -981,6 +1303,10 @@ function doPost(e) {
         case 'deleteTask':
           const deleteId = payload.id;
           return jsonResponse(deleteTask(deleteId));
+        
+        case 'deleteRecurringTask':
+          const deleteRecurringId = payload.id;
+          return jsonResponse(deleteRecurringTask(deleteRecurringId));
           
         case 'addUser':
           const name = payload.name || '';
@@ -1019,6 +1345,15 @@ function doPost(e) {
 
         case 'resumeRecurringTask':
           return jsonResponse(resumeRecurringTask(payload.id));
+
+        case 'setupTestTriggerEveryMinute':
+          return jsonResponse(setupTestTriggerEveryMinute());
+
+        case 'setupTestTriggerEvery5Minutes':
+          return jsonResponse(setupTestTriggerEvery5Minutes());
+
+        case 'deleteAllTriggers':
+          return jsonResponse(deleteAllTriggers());
 
         case 'uploadImageToDrive':
           // Загрузка изображения в Drive

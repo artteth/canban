@@ -1263,12 +1263,14 @@
         <label>🔄 Период повторения *</label>
         <div style="display:flex;gap:12px;align-items:center;">
           <span>Каждые</span>
-          <input type="number" id="recurringInterval" min="1" max="12" value="1" 
+          <input type="number" id="recurringInterval" min="1" max="1440" value="1" 
                style="width:60px;padding:8px;border:2px solid #e1e5eb;border-radius:8px;" />
           <select id="recurringType" style="flex:1;padding:8px;border:2px solid #e1e5eb;border-radius:8px;">
+            <option value="minutes">минут</option>
+            <option value="hours">часов</option>
             <option value="days">дней</option>
             <option value="weeks">недель</option>
-            <option value="months" selected>месяцев</option>
+            <option value="months">месяцев</option>
             <option value="years">лет</option>
           </select>
         </div>
@@ -1276,7 +1278,7 @@
       
       <div class="form-group">
         <label for="recurringNextDate">📅 Первое выполнение *</label>
-        <input type="date" id="recurringNextDate" />
+        <input type="datetime-local" id="recurringNextDate" />
       </div>
       
       <div class="modal-buttons">
@@ -1356,6 +1358,16 @@
       const m = String(now.getMonth() + 1).padStart(2, '0');
       const d = String(now.getDate()).padStart(2, '0');
       return `${y}-${m}-${d}`;
+    }
+
+    function getNowDatetimeLocal() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      const h = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${d}T${h}:${min}`;
     }
 
     function getDateOffsetStr(daysOffset) {
@@ -1537,6 +1549,8 @@
     let currentView = 'table';
     let sortState = { 'todo': null, 'in-progress': null, 'done': null };
     let pendingTaskIds = new Set();
+    const AUTO_REFRESH_SECONDS = 30;
+    let autoRefreshInterval = null;
 
     // ===== Font Settings Config =====
     const FONT_SETTINGS = {
@@ -2026,6 +2040,39 @@
       }
     }
 
+    function startAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+      autoRefreshInterval = setInterval(async () => {
+        console.log('Auto-refreshing admin tasks...');
+        try {
+          const newTasks = await getTasks();
+          if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+            console.log('Tasks changed, updating admin view...');
+            tasks = newTasks;
+            filteredTasks = [...tasks];
+            applyFilters();
+            renderTasksTable();
+            updateStats();
+            if (currentView === 'board') {
+              renderBoardView();
+            }
+          }
+        } catch (e) {
+          console.error('Auto-refresh error:', e);
+        }
+      }, AUTO_REFRESH_SECONDS * 1000);
+      console.log('Auto-refresh started (every ' + AUTO_REFRESH_SECONDS + 's)');
+    }
+
+    function stopAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+    }
+
     function populateUserFilter() {
       const select = document.getElementById('filterUser');
       select.innerHTML = '<option value="">Все пользователи</option>';
@@ -2374,6 +2421,12 @@
       if (!title) { alert('Введите название задачи'); return; }
       if (!assignedTo) { alert('Выберите исполнителя'); return; }
 
+      const saveBtn = document.querySelector('#taskModal .modal-btn-save');
+      const originalBtnText = saveBtn.textContent;
+      saveBtn.textContent = '⏳ Сохранение...';
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.7';
+
       try {
         if (editingTaskId) {
           await updateTask(editingTaskId, { title, assignedTo, status, plannedDate });
@@ -2385,6 +2438,10 @@
         await loadData();
       } catch (e) {
         alert('Ошибка: ' + e.message);
+      } finally {
+        saveBtn.textContent = originalBtnText;
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
       }
     }
 
@@ -2432,6 +2489,12 @@
 
       if (!name) { alert('Введите имя'); return; }
 
+      const saveBtn = document.querySelector('#userModal .modal-btn-save');
+      const originalBtnText = saveBtn.textContent;
+      saveBtn.textContent = '⏳ Сохранение...';
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.7';
+
       try {
         if (editingUserId) {
           await updateUser(editingUserId, name, telegramId, role);
@@ -2443,6 +2506,10 @@
         await loadData();
       } catch (e) {
         alert('Ошибка: ' + e.message);
+      } finally {
+        saveBtn.textContent = originalBtnText;
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
       }
     }
 
@@ -2478,7 +2545,12 @@
     async function init() {
       await loadData();
       loadSavedView();
+      startAutoRefresh();
     }
+
+    window.addEventListener('beforeunload', () => {
+      stopAutoRefresh();
+    });
 
     // ===== Recurring Tasks =====
     let recurringTasks = [];
@@ -2555,7 +2627,7 @@
       document.getElementById('recurringAssignee').value = '';
       document.getElementById('recurringInterval').value = '1';
       document.getElementById('recurringType').value = 'months';
-      document.getElementById('recurringNextDate').value = getTodayStr();
+      document.getElementById('recurringNextDate').value = getNowDatetimeLocal();
 
       // Заполнить исполнителей
       const select = document.getElementById('recurringAssignee');
@@ -2575,7 +2647,13 @@
       document.getElementById('recurringAssignee').value = task.assignedTo;
       document.getElementById('recurringInterval').value = task.recurrenceInterval;
       document.getElementById('recurringType').value = task.recurrenceType;
-      document.getElementById('recurringNextDate').value = task.nextDueDate;
+      
+      // Конвертируем дату в формат datetime-local если нужно
+      let nextDateVal = task.nextDueDate || '';
+      if (nextDateVal && !nextDateVal.includes('T')) {
+        nextDateVal = nextDateVal + 'T00:00';
+      }
+      document.getElementById('recurringNextDate').value = nextDateVal;
 
       // Заполнить исполнителей
       const select = document.getElementById('recurringAssignee');
@@ -2602,6 +2680,12 @@
       if (!interval || interval < 1) { alert('Укажите период'); return; }
       if (!nextDate) { alert('Укажите дату'); return; }
 
+      const saveBtn = document.querySelector('#recurringModal .modal-btn-save');
+      const originalBtnText = saveBtn.textContent;
+      saveBtn.textContent = '⏳ Сохранение...';
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.7';
+
       try {
         if (editingRecurringId) {
           await apiJsonp('updateRecurringTask', {
@@ -2627,14 +2711,23 @@
         loadRecurringTasks();
       } catch (e) {
         alert('Ошибка: ' + e.message);
+      } finally {
+        saveBtn.textContent = originalBtnText;
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
       }
     }
 
     async function removeRecurringTask(taskId) {
-      if (!confirm('Удалить цикличность? Задача останется, но не будет повторяться.')) return;
+      if (!confirm('Удалить эту циклическую задачу полностью? Все будущие срабатывания будут отменены.')) return;
 
       try {
-        await apiJsonp('removeRecurring', { id: taskId });
+        const result = await apiJsonp('deleteRecurringTask', { id: taskId });
+        if (result && result.ok) {
+          alert('Задача удалена');
+        } else {
+          alert('Ошибка: ' + (result?.error || 'Неизвестная ошибка'));
+        }
         loadRecurringTasks();
       } catch (e) {
         alert('Ошибка: ' + e.message);
