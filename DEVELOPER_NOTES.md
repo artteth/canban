@@ -483,3 +483,77 @@ Logger.log('Error: ' + e.message);
 **Создано:** 2026-03-05  
 **Версия:** 2.0  
 **Автор:** Artem
+
+---
+
+## 🔄 Автообновление (Auto-Refresh)
+
+### Обзор
+
+Система автоматически обновляет данные на страницах через заданные интервалы времени, чтобы все пользователи видели актуальную информацию.
+
+### Реализация
+
+#### Клиентская сторона (Frontend)
+
+| Страница | Интервал | Файл | Функция |
+|----------|----------|------|---------|
+| index.html | 30 сек | [index.html:1161](../index.html) | `startAutoRefresh()` |
+| admin.html | 30 сек | [admin.html:1161](../admin.html) | `startAutoRefresh()` |
+| select_user.html | — | Нет | — |
+
+#### Серверная сторона (Backend)
+
+| Триггер | Интервал | Файл | Функция |
+|---------|----------|------|---------|
+| checkUpdates | 1 мин | [cod_v2.gs:54](../cod_v2.gs) | `checkUpdates()` |
+| checkUpdates | 5 мин | [cod_v2.gs:72](../cod_v2.gs) | `checkUpdates()` |
+| checkUpdates | в 00:00 | [cod_v2.gs:35](../cod_v2.gs) | `checkUpdates()` |
+
+### Как работает клиентский автообновление
+
+```javascript
+// Константа интервала
+const AUTO_REFRESH_SECONDS = 30;
+
+// Запуск
+function startAutoRefresh() {
+  autoRefreshInterval = setInterval(async () => {
+    const newTasks = await getTasks();
+    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+      tasks = newTasks;
+      renderBoard(); // или applyFilters() в admin
+    }
+  }, AUTO_REFRESH_SECONDS * 1000);
+}
+
+// Остановка
+function stopAutoRefresh() {
+  clearInterval(autoRefreshInterval);
+}
+```
+
+### Добавление автообновления на новую страницу
+
+1. Добавить переменные состояния:
+   ```javascript
+   const AUTO_REFRESH_SECONDS = 30;
+   let autoRefreshInterval = null;
+   ```
+
+2. Добавить функции `startAutoRefresh()` и `stopAutoRefresh()`
+
+3. Вызвать `startAutoRefresh()` в функции инициализации `init()`
+
+4. Добавить очистку при закрытии страницы:
+   ```javascript
+   window.addEventListener('beforeunload', () => {
+     stopAutoRefresh();
+   });
+   ```
+
+### Проверка работы
+
+- Откройте страницу в двух браузерах
+- Измените задачу в одном браузере
+- Во втором браузере изменения должны появиться через 30 секунд
